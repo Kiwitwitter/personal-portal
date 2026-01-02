@@ -8,17 +8,9 @@ import { getBlogPosts, getBlogPostBySlug, getNotionPageContent } from '@/lib/not
 import { formatDate } from '@/lib/utils'
 
 export const runtime = 'edge'
-export const revalidate = 60 // ISR: revalidate every 60 seconds
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>
-}
-
-export async function generateStaticParams() {
-  const posts = await getBlogPosts()
-  return posts.map((post) => ({
-    slug: post.slug,
-  }))
 }
 
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
