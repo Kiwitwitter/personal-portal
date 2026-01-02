@@ -7,6 +7,7 @@ import { NotionRenderer } from '@/components/notion/NotionRenderer'
 import { getBlogPosts, getBlogPostBySlug, getNotionPageContent } from '@/lib/notion'
 import { formatDate } from '@/lib/utils'
 
+export const runtime = 'edge'
 export const revalidate = 60 // ISR: revalidate every 60 seconds
 
 interface BlogPostPageProps {
