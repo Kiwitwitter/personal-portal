@@ -2,3 +2,7 @@ name = "personal-portal"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = ".vercel/output/static"
+
+[vars]
+NOTION_BLOG_DATABASE_ID = "2dc460b6-4206-802a-b790-fa82ae0f5438"
+NOTION_GALLERY_DATABASE_ID = "2dc460b6-4206-8060-9f46-ce40229f8e6b"
