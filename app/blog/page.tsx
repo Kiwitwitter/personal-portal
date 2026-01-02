@@ -3,12 +3,12 @@ import { Container } from '@/components/ui/Container'
 import { BlogList } from '@/components/blog/BlogList'
 import { getBlogPosts, getCategories, getTags } from '@/lib/notion'
 
+export const runtime = 'edge'
+
 export const metadata: Metadata = {
   title: 'Blog | Peng Zhang',
   description: 'Blog posts, projects, and notes about software engineering and distributed systems.',
 }
-
-export const revalidate = 60 // ISR: revalidate every 60 seconds
 
 export default async function BlogPage() {
   const [posts, categories, tags] = await Promise.all([

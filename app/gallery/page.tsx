@@ -3,12 +3,12 @@ import { Container } from '@/components/ui/Container'
 import { GalleryGrid } from '@/components/gallery/GalleryGrid'
 import { getGalleryImages } from '@/lib/notion'
 
+export const runtime = 'edge'
+
 export const metadata: Metadata = {
   title: 'Gallery | Peng Zhang',
   description: 'Photography gallery showcasing moments captured through my lens.',
 }
-
-export const revalidate = 60 // ISR: revalidate every 60 seconds
 
 export default async function GalleryPage() {
   const images = await getGalleryImages()
