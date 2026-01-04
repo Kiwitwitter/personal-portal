@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useTheme } from 'next-themes'
 import { ExtendedRecordMap } from 'notion-types'
 
 // Dynamically import react-notion-x to avoid SSR issues
@@ -36,11 +37,14 @@ interface NotionRendererProps {
 }
 
 export function NotionRenderer({ recordMap, rootPageId }: NotionRendererProps) {
+  const { resolvedTheme } = useTheme()
+  const isDark = resolvedTheme === 'dark'
+
   return (
     <NotionRendererLib
       recordMap={recordMap}
       fullPage={false}
-      darkMode={false}
+      darkMode={isDark}
       rootPageId={rootPageId}
       components={{
         Code,
