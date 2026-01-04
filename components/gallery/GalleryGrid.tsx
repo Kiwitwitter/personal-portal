@@ -22,29 +22,27 @@ export function GalleryGrid({ images }: GalleryGridProps) {
 
   return (
     <>
-      {/* Masonry Grid */}
-      <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
+      {/* Instagram-style Grid */}
+      <div className="grid grid-cols-3 gap-1 sm:gap-2">
         {images.map((image, index) => (
           <div
             key={image.id}
-            className="break-inside-avoid group cursor-pointer"
+            className="relative aspect-square group cursor-pointer overflow-hidden bg-muted"
             onClick={() => setLightboxIndex(index)}
           >
-            <div className="relative overflow-hidden rounded-lg bg-muted">
-              <Image
-                src={image.url}
-                alt={image.caption || 'Gallery image'}
-                width={600}
-                height={400}
-                className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-300"
-                unoptimized // Notion images don't work well with Next.js image optimization
-              />
-              {/* Hover Overlay */}
-              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
-                {image.caption && (
-                  <p className="text-white text-sm">{image.caption}</p>
-                )}
-              </div>
+            <Image
+              src={image.url}
+              alt={image.caption || 'Gallery image'}
+              fill
+              sizes="(max-width: 640px) 33vw, (max-width: 1024px) 33vw, 300px"
+              className="object-cover group-hover:scale-105 transition-transform duration-300"
+              unoptimized
+            />
+            {/* Hover Overlay */}
+            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              {image.caption && (
+                <p className="text-white text-sm text-center px-2">{image.caption}</p>
+              )}
             </div>
           </div>
         ))}
