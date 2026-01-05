@@ -32,26 +32,31 @@ function getVideoType(url: string): string {
   return 'video/mp4'
 }
 
-function useInView(options?: IntersectionObserverInit) {
+function useLazyLoad(skip: boolean) {
   const ref = useRef<HTMLDivElement>(null)
-  const [isInView, setIsInView] = useState(false)
+  const [hasLoaded, setHasLoaded] = useState(skip)
 
   useEffect(() => {
+    if (skip || hasLoaded) return
+
     const element = ref.current
     if (!element) return
 
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) {
-        setIsInView(true)
-        observer.disconnect()
-      }
-    }, { rootMargin: '200px', ...options })
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setHasLoaded(true)
+          observer.disconnect()
+        }
+      },
+      { rootMargin: '200px' }
+    )
 
     observer.observe(element)
     return () => observer.disconnect()
-  }, [options])
+  }, [skip, hasLoaded])
 
-  return { ref, isInView }
+  return { ref, hasLoaded }
 }
 
 interface GalleryItemProps {
@@ -62,8 +67,8 @@ interface GalleryItemProps {
 
 function GalleryItem({ image, index, onClick }: GalleryItemProps) {
   const isPriority = index < PRIORITY_COUNT
-  const { ref, isInView } = useInView()
-  const shouldRender = isPriority || isInView
+  const { ref, hasLoaded } = useLazyLoad(isPriority)
+  const shouldRender = hasLoaded
 
   return (
     <div
