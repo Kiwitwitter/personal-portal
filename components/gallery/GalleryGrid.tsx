@@ -8,20 +8,48 @@ import Captions from 'yet-another-react-lightbox/plugins/captions'
 import 'yet-another-react-lightbox/plugins/captions.css'
 import Counter from 'yet-another-react-lightbox/plugins/counter'
 import 'yet-another-react-lightbox/plugins/counter.css'
+import Video from 'yet-another-react-lightbox/plugins/video'
+import { Play } from 'lucide-react'
 import type { GalleryImage } from '@/lib/types'
 
 interface GalleryGridProps {
   images: GalleryImage[]
 }
 
+const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.ogg', '.mov']
+
+function isVideo(url: string): boolean {
+  const urlWithoutQuery = url.split('?')[0].toLowerCase()
+  return VIDEO_EXTENSIONS.some((ext) => urlWithoutQuery.endsWith(ext))
+}
+
+function getVideoType(url: string): string {
+  const urlWithoutQuery = url.split('?')[0].toLowerCase()
+  if (urlWithoutQuery.endsWith('.webm')) return 'video/webm'
+  if (urlWithoutQuery.endsWith('.ogg')) return 'video/ogg'
+  if (urlWithoutQuery.endsWith('.mov')) return 'video/mp4'
+  return 'video/mp4'
+}
+
 export function GalleryGrid({ images }: GalleryGridProps) {
   const [selectedPost, setSelectedPost] = useState<GalleryImage | null>(null)
 
   const getSlides = (post: GalleryImage) =>
-    post.urls.map((url) => ({
-      src: url,
-      description: post.caption,
-    }))
+    post.urls.map((url) => {
+      if (isVideo(url)) {
+        return {
+          type: 'video' as const,
+          sources: [{ src: url, type: getVideoType(url) }],
+          description: post.caption,
+        }
+      }
+      return {
+        src: url,
+        description: post.caption,
+      }
+    })
+
+  const hasVideo = (post: GalleryImage) => post.urls.some(isVideo)
 
   return (
     <>
@@ -34,14 +62,32 @@ export function GalleryGrid({ images }: GalleryGridProps) {
             onClick={() => setSelectedPost(image)}
           >
             {image.urls[0] && (
-              <Image
-                src={image.urls[0]}
-                alt={image.caption || 'Gallery image'}
-                fill
-                sizes="(max-width: 640px) 33vw, (max-width: 1024px) 33vw, 300px"
-                className="object-cover group-hover:scale-105 transition-transform duration-300"
-                unoptimized
-              />
+              isVideo(image.urls[0]) ? (
+                <video
+                  src={image.urls[0]}
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  muted
+                  playsInline
+                  preload="metadata"
+                />
+              ) : (
+                <Image
+                  src={image.urls[0]}
+                  alt={image.caption || 'Gallery image'}
+                  fill
+                  sizes="(max-width: 640px) 33vw, (max-width: 1024px) 33vw, 300px"
+                  className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  unoptimized
+                />
+              )
+            )}
+            {/* Video play indicator */}
+            {image.urls[0] && isVideo(image.urls[0]) && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="w-12 h-12 rounded-full bg-black/50 flex items-center justify-center">
+                  <Play className="w-6 h-6 text-white fill-white ml-1" />
+                </div>
+              </div>
             )}
             {/* Multi-image indicator */}
             {image.urls.length > 1 && (
@@ -69,7 +115,12 @@ export function GalleryGrid({ images }: GalleryGridProps) {
         open={selectedPost !== null}
         close={() => setSelectedPost(null)}
         slides={selectedPost ? getSlides(selectedPost) : []}
-        plugins={selectedPost && selectedPost.urls.length > 1 ? [Captions, Counter] : [Captions]}
+        plugins={[
+          Video,
+          Captions,
+          ...(selectedPost && selectedPost.urls.length > 1 ? [Counter] : []),
+        ]}
+        video={{ autoPlay: true }}
         captions={{ showToggle: true }}
         counter={{ container: { style: { top: 'unset', bottom: 0 } } }}
         carousel={{ finite: selectedPost?.urls.length === 1 }}
