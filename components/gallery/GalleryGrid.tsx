@@ -101,9 +101,18 @@ export function GalleryGrid({ images }: GalleryGridProps) {
               </div>
             )}
             {/* Hover Overlay */}
-            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center">
               {image.caption && (
                 <p className="text-white text-sm text-center px-2">{image.caption}</p>
+              )}
+              {image.date && (
+                <p className="text-white/70 text-xs text-center px-2 mt-1">
+                  {new Date(image.date).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                  })}
+                </p>
               )}
             </div>
           </div>
@@ -122,7 +131,7 @@ export function GalleryGrid({ images }: GalleryGridProps) {
         ]}
         video={{ autoPlay: true }}
         captions={{ showToggle: true }}
-        counter={{ container: { style: { top: 'unset', bottom: 0 } } }}
+        counter={{ container: { style: { top: 0, bottom: 'unset' } } }}
         carousel={{ finite: selectedPost?.urls.length === 1 }}
         render={{
           buttonPrev: selectedPost?.urls.length === 1 ? () => null : undefined,
