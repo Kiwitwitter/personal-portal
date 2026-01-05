@@ -14,6 +14,7 @@ export interface GalleryImage {
   id: string
   urls: string[]
   caption: string
+  location: string
   date: string
   published: boolean
 }

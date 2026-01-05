@@ -193,6 +193,7 @@ function parseNotionPageToGalleryImage(page: NotionPage): GalleryImage {
     id: page.id,
     urls: getFilesProperty(properties.Image),
     caption: getTextProperty(properties.Caption),
+    location: getTextProperty(properties.Location),
     date: getDateProperty(properties.Date),
     published: getCheckboxProperty(properties.Published),
   }

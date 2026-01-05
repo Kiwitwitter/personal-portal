@@ -9,7 +9,7 @@ import 'yet-another-react-lightbox/plugins/captions.css'
 import Counter from 'yet-another-react-lightbox/plugins/counter'
 import 'yet-another-react-lightbox/plugins/counter.css'
 import Video from 'yet-another-react-lightbox/plugins/video'
-import { Play } from 'lucide-react'
+import { Play, MapPin } from 'lucide-react'
 import type { GalleryImage } from '@/lib/types'
 
 interface GalleryGridProps {
@@ -127,6 +127,13 @@ export function GalleryGrid({ images }: GalleryGridProps) {
         render={{
           buttonPrev: selectedPost?.urls.length === 1 ? () => null : undefined,
           buttonNext: selectedPost?.urls.length === 1 ? () => null : undefined,
+          slideFooter: () =>
+            selectedPost?.location ? (
+              <div className="absolute bottom-4 right-4 flex items-center gap-1 text-white/80 text-sm">
+                <MapPin className="w-3 h-3" />
+                <span>{selectedPost.location}</span>
+              </div>
+            ) : null,
         }}
         styles={{
           container: { backgroundColor: 'rgba(0, 0, 0, 0.9)' },
