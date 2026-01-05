@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import Lightbox from 'yet-another-react-lightbox'
 import 'yet-another-react-lightbox/styles.css'
@@ -17,6 +17,7 @@ interface GalleryGridProps {
 }
 
 const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.ogg', '.mov']
+const PRIORITY_COUNT = 12
 
 function isVideo(url: string): boolean {
   const urlWithoutQuery = url.split('?')[0].toLowerCase()
@@ -29,6 +30,110 @@ function getVideoType(url: string): string {
   if (urlWithoutQuery.endsWith('.ogg')) return 'video/ogg'
   if (urlWithoutQuery.endsWith('.mov')) return 'video/mp4'
   return 'video/mp4'
+}
+
+function useInView(options?: IntersectionObserverInit) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [isInView, setIsInView] = useState(false)
+
+  useEffect(() => {
+    const element = ref.current
+    if (!element) return
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setIsInView(true)
+        observer.disconnect()
+      }
+    }, { rootMargin: '200px', ...options })
+
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [options])
+
+  return { ref, isInView }
+}
+
+interface GalleryItemProps {
+  image: GalleryImage
+  index: number
+  onClick: () => void
+}
+
+function GalleryItem({ image, index, onClick }: GalleryItemProps) {
+  const isPriority = index < PRIORITY_COUNT
+  const { ref, isInView } = useInView()
+  const shouldRender = isPriority || isInView
+
+  return (
+    <div
+      ref={ref}
+      className="relative aspect-square group cursor-pointer overflow-hidden bg-muted"
+      onClick={onClick}
+    >
+      {shouldRender && image.urls[0] && (
+        isVideo(image.urls[0]) ? (
+          <video
+            src={image.urls[0]}
+            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            muted
+            playsInline
+            preload="metadata"
+          />
+        ) : (
+          <Image
+            src={image.urls[0]}
+            alt={image.caption || 'Gallery image'}
+            fill
+            sizes="(max-width: 640px) 33vw, (max-width: 1024px) 33vw, 300px"
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            unoptimized
+            priority={isPriority}
+          />
+        )
+      )}
+      {/* Video play indicator */}
+      {shouldRender && image.urls[0] && isVideo(image.urls[0]) && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="w-12 h-12 rounded-full bg-black/50 flex items-center justify-center">
+            <Play className="w-6 h-6 text-white fill-white ml-1" />
+          </div>
+        </div>
+      )}
+      {/* Multi-image indicator */}
+      {image.urls.length > 1 && (
+        <div className="absolute top-2 right-2 flex gap-0.5">
+          {image.urls.slice(0, 3).map((_, i) => (
+            <div
+              key={i}
+              className="w-1.5 h-1.5 rounded-full bg-white shadow-sm"
+            />
+          ))}
+        </div>
+      )}
+      {/* Hover Overlay */}
+      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center">
+        {image.caption && (
+          <p className="text-white text-sm text-center px-2">{image.caption}</p>
+        )}
+        {image.date && (
+          <p className="text-white/70 text-xs text-center px-2 mt-1">
+            {new Date(image.date).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+            })}
+          </p>
+        )}
+        {image.location && (
+          <p className="text-white/70 text-xs text-center px-2 mt-1 flex items-center gap-1">
+            <MapPin className="w-3 h-3" />
+            <span>{image.location}</span>
+          </p>
+        )}
+      </div>
+    </div>
+  )
 }
 
 export function GalleryGrid({ images }: GalleryGridProps) {
@@ -55,73 +160,13 @@ export function GalleryGrid({ images }: GalleryGridProps) {
     <>
       {/* Instagram-style Grid */}
       <div className="grid grid-cols-3 gap-1 sm:gap-2">
-        {images.map((image) => (
-          <div
+        {images.map((image, index) => (
+          <GalleryItem
             key={image.id}
-            className="relative aspect-square group cursor-pointer overflow-hidden bg-muted"
+            image={image}
+            index={index}
             onClick={() => setSelectedPost(image)}
-          >
-            {image.urls[0] && (
-              isVideo(image.urls[0]) ? (
-                <video
-                  src={image.urls[0]}
-                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  muted
-                  playsInline
-                  preload="metadata"
-                />
-              ) : (
-                <Image
-                  src={image.urls[0]}
-                  alt={image.caption || 'Gallery image'}
-                  fill
-                  sizes="(max-width: 640px) 33vw, (max-width: 1024px) 33vw, 300px"
-                  className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  unoptimized
-                />
-              )
-            )}
-            {/* Video play indicator */}
-            {image.urls[0] && isVideo(image.urls[0]) && (
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="w-12 h-12 rounded-full bg-black/50 flex items-center justify-center">
-                  <Play className="w-6 h-6 text-white fill-white ml-1" />
-                </div>
-              </div>
-            )}
-            {/* Multi-image indicator */}
-            {image.urls.length > 1 && (
-              <div className="absolute top-2 right-2 flex gap-0.5">
-                {image.urls.slice(0, 3).map((_, i) => (
-                  <div
-                    key={i}
-                    className="w-1.5 h-1.5 rounded-full bg-white shadow-sm"
-                  />
-                ))}
-              </div>
-            )}
-            {/* Hover Overlay */}
-            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center">
-              {image.caption && (
-                <p className="text-white text-sm text-center px-2">{image.caption}</p>
-              )}
-              {image.date && (
-                <p className="text-white/70 text-xs text-center px-2 mt-1">
-                  {new Date(image.date).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                  })}
-                </p>
-              )}
-              {image.location && (
-                <p className="text-white/70 text-xs text-center px-2 mt-1 flex items-center gap-1">
-                  <MapPin className="w-3 h-3" />
-                  <span>{image.location}</span>
-                </p>
-              )}
-            </div>
-          </div>
+          />
         ))}
       </div>
 
