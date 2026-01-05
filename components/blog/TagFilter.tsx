@@ -20,27 +20,28 @@ export function TagFilter({ tags, selected, onChange }: TagFilterProps) {
   if (tags.length === 0) return null
 
   return (
-    <div className="flex items-center gap-2 flex-wrap">
+    <div className="flex items-center gap-3 flex-wrap font-mono text-xs">
+      <span className="text-muted-foreground/50 hidden sm:inline">filter by tags:</span>
       {tags.map((tag) => (
         <button
           key={tag}
           onClick={() => toggleTag(tag)}
           className={cn(
-            'px-3 py-1 text-xs rounded-full transition-colors',
+            'transition-colors',
             selected.includes(tag)
-              ? 'bg-primary text-white'
-              : 'bg-muted text-muted-foreground hover:bg-border'
+              ? 'text-green-400 font-bold'
+              : 'text-muted-foreground/70 hover:text-green-400/70'
           )}
         >
-          {tag}
+          #{tag}
         </button>
       ))}
       {selected.length > 0 && (
         <button
           onClick={() => onChange([])}
-          className="px-3 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          className="text-red-400/70 hover:text-red-400 transition-colors ml-2"
         >
-          Clear
+          (clear)
         </button>
       )}
     </div>

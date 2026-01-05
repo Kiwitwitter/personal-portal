@@ -3,6 +3,8 @@ import { Inter, JetBrains_Mono } from 'next/font/google'
 import { ThemeProvider } from '@/components/ui/ThemeProvider'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
+import { CursorSpotlight } from '@/components/ui/CursorSpotlight'
+import { TechGrid } from '@/components/ui/TechGrid'
 import './globals.css'
 
 const inter = Inter({
@@ -41,9 +43,11 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
         <ThemeProvider>
-          <div className="flex min-h-screen flex-col">
+          <div className="flex min-h-screen flex-col relative">
+            <TechGrid />
+            <CursorSpotlight />
             <Navbar />
-            <main className="flex-1">{children}</main>
+            <main className="flex-1 relative z-10">{children}</main>
             <Footer />
           </div>
         </ThemeProvider>

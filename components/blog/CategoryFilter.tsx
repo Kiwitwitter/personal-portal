@@ -10,30 +10,30 @@ interface CategoryFilterProps {
 
 export function CategoryFilter({ categories, selected, onChange }: CategoryFilterProps) {
   return (
-    <div className="flex items-center gap-2 flex-wrap">
+    <div className="flex items-center gap-4 flex-wrap font-mono text-sm">
       <button
         onClick={() => onChange(null)}
         className={cn(
-          'px-4 py-2 text-sm rounded-lg transition-colors',
+          'transition-colors',
           selected === null
-            ? 'bg-primary text-white'
-            : 'bg-muted text-muted-foreground hover:bg-border'
+            ? 'text-primary font-bold'
+            : 'text-muted-foreground hover:text-foreground'
         )}
       >
-        All
+        {selected === null ? '[ All ]' : 'All'}
       </button>
       {categories.map((category) => (
         <button
           key={category}
           onClick={() => onChange(category)}
           className={cn(
-            'px-4 py-2 text-sm rounded-lg transition-colors',
+            'transition-colors',
             selected === category
-              ? 'bg-primary text-white'
-              : 'bg-muted text-muted-foreground hover:bg-border'
+              ? 'text-primary font-bold'
+              : 'text-muted-foreground hover:text-foreground'
           )}
         >
-          {category}
+          {selected === category ? `[ ${category} ]` : category}
         </button>
       ))}
     </div>

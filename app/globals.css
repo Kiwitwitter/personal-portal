@@ -3,25 +3,36 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #0a0a0a;
-  --card: #f4f4f5;
-  --card-foreground: #0a0a0a;
-  --primary: #2563eb;
-  --muted: #f4f4f5;
-  --muted-foreground: #71717a;
-  --border: #e4e4e7;
+  --background: #0a0a0a;
+  --foreground: #f0f0f0;
+  --card: #121212;
+  --card-foreground: #f0f0f0;
+  --primary: #4ade80;
+  /* Terminal Green */
+  --secondary: #3b82f6;
+  /* Tech Blue */
+  --muted: #1e1e1e;
+  --muted-foreground: #a0a0a0;
+  --accent: #f59e0b;
+  /* Warning/Accent Yellow */
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #4ade80;
 }
 
 .dark {
   --background: #0a0a0a;
-  --foreground: #fafafa;
-  --card: #18181b;
-  --card-foreground: #fafafa;
-  --primary: #3b82f6;
-  --muted: #27272a;
-  --muted-foreground: #a1a1aa;
-  --border: #27272a;
+  --foreground: #f0f0f0;
+  --card: #121212;
+  --card-foreground: #f0f0f0;
+  --primary: #4ade80;
+  --secondary: #3b82f6;
+  --muted: #1e1e1e;
+  --muted-foreground: #a0a0a0;
+  --accent: #f59e0b;
+  --border: #3f3f46;
+  --input: #27272a;
+  --ring: #4ade80;
 }
 
 * {
@@ -74,22 +85,49 @@ a {
 }
 
 /* react-notion-x overrides */
-.notion-page {
+.notion {
+  width: 100% !important;
+  max-width: 100% !important;
+  font-family: var(--font-inter), system-ui, sans-serif !important;
+}
+
+.notion-frame {
+  width: 100% !important;
+  max-width: 100% !important;
   padding: 0 !important;
 }
 
+.notion-page {
+  padding-bottom: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Hide the default notion title since we have our custom one */
 .notion-title {
-  font-family: var(--font-inter), system-ui, sans-serif !important;
+  display: none !important;
+}
+
+/* Hide the first H1 block if it mimics the title (common in Notion exports) */
+.notion-page-content>.notion-h1:first-child,
+.notion-page-content>.notion-h:first-child {
+  display: none !important;
 }
 
 .notion-code {
   font-family: var(--font-jetbrains-mono), monospace !important;
+  background: var(--muted) !important;
+  border-radius: 0.5rem;
+}
+
+/* Adjust text colors for better contrast in dark mode */
+.dark .notion-text,
+.dark .notion-h1,
+.dark .notion-h2,
+.dark .notion-h3 {
+  color: var(--foreground) !important;
 }
 
 .dark .notion-page {
-  background: var(--background) !important;
-}
-
-.dark .notion-text {
-  color: var(--foreground) !important;
+  background: transparent !important;
 }

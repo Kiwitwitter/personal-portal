@@ -49,42 +49,51 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         {/* Back Link */}
         <Link
           href="/blog"
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
+          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8 font-mono text-sm group"
         >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Blog
+          <span className="text-green-500 group-hover:underline">$</span>
+          <span className="group-hover:underline">cd ..</span>
         </Link>
 
         {/* Post Header */}
-        <header className="mb-12">
-          <h1 className="text-4xl font-bold tracking-tight mb-4">{post.title}</h1>
-
-          <div className="flex items-center gap-6 text-sm text-muted-foreground flex-wrap">
-            <span className="flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
-              {formatDate(post.date)}
-            </span>
-            {post.category && (
-              <span className="flex items-center gap-2">
-                <Folder className="w-4 h-4" />
-                {post.category}
-              </span>
-            )}
+        <header className="mb-12 border-b border-border pb-8">
+          <div className="flex items-center gap-2 font-mono text-sm text-muted-foreground mb-6">
+            <span className="text-blue-400">~/blog/posts/</span>
+            <span className="text-yellow-400">{slug}.md</span>
           </div>
 
-          {post.tags.length > 0 && (
-            <div className="flex items-center gap-2 mt-4 flex-wrap">
-              <Tag className="w-4 h-4 text-muted-foreground" />
-              {post.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="text-xs px-2 py-1 bg-muted rounded-full text-muted-foreground"
-                >
-                  {tag}
-                </span>
-              ))}
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-6 font-mono bg-clip-text text-transparent bg-gradient-to-r from-foreground to-muted-foreground">
+            {post.title}
+          </h1>
+
+          <div className="flex flex-col gap-3 font-mono text-sm border-l-2 border-border pl-4">
+            <div className="flex items-center gap-3">
+              <span className="text-blue-400 w-20">date:</span>
+              <span className="text-muted-foreground">"{formatDate(post.date)}"</span>
             </div>
-          )}
+
+            {post.category && (
+              <div className="flex items-center gap-3">
+                <span className="text-blue-400 w-20">category:</span>
+                <span className="text-green-400">"{post.category}"</span>
+              </div>
+            )}
+
+            {post.tags.length > 0 && (
+              <div className="flex items-start gap-3">
+                <span className="text-blue-400 w-20">tags:</span>
+                <div className="flex flex-wrap gap-2">
+                  <span className="text-yellow-400">[</span>
+                  {post.tags.map((tag, index) => (
+                    <span key={tag} className="text-muted-foreground">
+                      "{tag}"{index < post.tags.length - 1 && ","}
+                    </span>
+                  ))}
+                  <span className="text-yellow-400">]</span>
+                </div>
+              </div>
+            )}
+          </div>
         </header>
 
         {/* Post Content */}
