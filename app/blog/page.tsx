@@ -7,7 +7,7 @@ export const runtime = 'edge'
 
 export const metadata: Metadata = {
   title: 'Blog | Peng Zhang',
-  description: 'Blog posts, projects, and notes about software engineering and distributed systems.',
+  description: 'Blog posts, projects, and notes about my thought and work.',
 }
 
 export default async function BlogPage() {

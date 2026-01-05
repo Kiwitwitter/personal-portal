@@ -5,7 +5,7 @@ import { Github, Mail, Linkedin } from 'lucide-react'
 
 export const TerminalHero = () => {
     const [text, setText] = useState('')
-    const fullText = "Hello, I'm Peng Zhang.\nBackend Engineer | Distributed Systems Specialist."
+    const fullText = "Hello, I'm Peng Zhang.\nBackend Engineer."
 
     useEffect(() => {
         let i = 0
