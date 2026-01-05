@@ -6,7 +6,6 @@ Designed to focus on content and typography, featuring a dark mode terminal them
 🔗 **Live Site**: [pzhng.com](https://pzhng.com)
 
 ![Screenshot](./public/screenshot.png)
-*(Note: Replace with an actual screenshot if available)*
 
 ## ✨ Features
 
