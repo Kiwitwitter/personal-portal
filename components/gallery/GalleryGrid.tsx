@@ -132,7 +132,7 @@ export function GalleryGrid({ images }: GalleryGridProps) {
         video={{ autoPlay: true }}
         captions={{ showToggle: true }}
         counter={{ container: { style: { top: 0, bottom: 'unset' } } }}
-        carousel={{ finite: selectedPost?.urls.length === 1 }}
+        carousel={{ finite: true }}
         render={{
           buttonPrev: selectedPost?.urls.length === 1 ? () => null : undefined,
           buttonNext: selectedPost?.urls.length === 1 ? () => null : undefined,
@@ -145,7 +145,8 @@ export function GalleryGrid({ images }: GalleryGridProps) {
             ) : null,
         }}
         styles={{
-          container: { backgroundColor: 'rgba(0, 0, 0, 0.9)' },
+          container: { backgroundColor: 'rgba(0, 0, 0, 0.9)', padding: '40px' },
+          slide: { padding: '20px' },
         }}
       />
     </>
