@@ -114,6 +114,12 @@ export function GalleryGrid({ images }: GalleryGridProps) {
                   })}
                 </p>
               )}
+              {image.location && (
+                <p className="text-white/70 text-xs text-center px-2 mt-1 flex items-center gap-1">
+                  <MapPin className="w-3 h-3" />
+                  <span>{image.location}</span>
+                </p>
+              )}
             </div>
           </div>
         ))}
