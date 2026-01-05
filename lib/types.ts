@@ -12,7 +12,7 @@ export interface BlogPost {
 
 export interface GalleryImage {
   id: string
-  url: string
+  urls: string[]
   caption: string
   date: string
   published: boolean

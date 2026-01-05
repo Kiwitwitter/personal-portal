@@ -191,7 +191,7 @@ function parseNotionPageToGalleryImage(page: NotionPage): GalleryImage {
 
   return {
     id: page.id,
-    url: getFileProperty(properties.Image),
+    urls: getFilesProperty(properties.Image),
     caption: getTextProperty(properties.Caption),
     date: getDateProperty(properties.Date),
     published: getCheckboxProperty(properties.Published),
@@ -246,6 +246,15 @@ function getFileProperty(property: NotionPage['properties'][string]): string {
     return file.file?.url || file.external?.url || ''
   }
   return ''
+}
+
+function getFilesProperty(property: NotionPage['properties'][string]): string[] {
+  if (property?.type === 'files' && property.files) {
+    return property.files
+      .map((file) => file.file?.url || file.external?.url || '')
+      .filter(Boolean)
+  }
+  return []
 }
 
 function getCoverImage(page: NotionPage): string | undefined {
