@@ -28,7 +28,7 @@ export function Footer() {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-sm text-muted-foreground">
           {/* Copyright as comment */}
           <div className="flex items-center gap-2">
-            <span className="text-muted-foreground/50">//</span>
+            <span className="text-muted-foreground/50">{`//`}</span>
             <span>&copy; {currentYear} Peng Zhang</span>
           </div>
 
@@ -38,9 +38,9 @@ export function Footer() {
             <span className="text-yellow-400">stack</span>
             <span>=</span>
             <span className="text-muted-foreground">{`{`}</span>
-            <a href="https://nextjs.org" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">"Next.js"</a>
+            <a href="https://nextjs.org" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">&quot;Next.js&quot;</a>
             <span>,</span>
-            <a href="https://notion.so" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">"Notion"</a>
+            <a href="https://notion.so" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">&quot;Notion&quot;</a>
             <span className="text-muted-foreground">{`}`}</span>
           </div>
 

@@ -57,43 +57,58 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
         {/* Post Header */}
         <header className="mb-12 border-b border-border pb-8">
-          <div className="flex items-center gap-2 font-mono text-sm text-muted-foreground mb-6">
-            <span className="text-blue-400">~/blog/posts/</span>
-            <span className="text-yellow-400">{slug}.md</span>
-          </div>
+          {/* Terminal Header */}
+          <div className="border border-border bg-card/50 rounded-lg p-6 mb-8 font-mono text-sm relative overflow-hidden group">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary/20 to-transparent opacity-50" />
 
+            <div className="flex flex-col gap-4 relative z-10">
+              {/* File Info */}
+              <div className="flex items-center gap-2 text-muted-foreground border-b border-border/50 pb-4">
+                <span className="text-primary">$</span>
+                <span>cat</span>
+                <span className="text-yellow-400">./posts/{post.slug}.md</span>
+              </div>
+
+              {/* Metadata Block */}
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <span className="text-blue-400">const</span>
+                  <span className="text-yellow-400">metadata</span>
+                  <span>=</span>
+                  <span className="text-muted-foreground">{`{`}</span>
+                </div>
+
+                <div className="pl-4 space-y-1">
+                  <div>
+                    <span className="text-blue-300">date:</span> <span className="text-green-400">&quot;{formatDate(post.date)}&quot;</span>,
+                  </div>
+                  {post.category && (
+                    <div>
+                      <span className="text-blue-300">category:</span> <span className="text-green-400">&quot;{post.category}&quot;</span>,
+                    </div>
+                  )}
+                  {post.tags.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-blue-300">tags:</span>
+                      <span>[</span>
+                      {post.tags.map((tag, i) => (
+                        <span key={tag}>
+                          <span className="text-green-400">&quot;{tag}&quot;</span>
+                          {i < post.tags.length - 1 && ','}
+                        </span>
+                      ))}
+                      <span>]</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="text-muted-foreground">{`}`}</div>
+              </div>
+            </div>
+          </div>
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-6 font-mono bg-clip-text text-transparent bg-gradient-to-r from-foreground to-muted-foreground">
             {post.title}
           </h1>
-
-          <div className="flex flex-col gap-3 font-mono text-sm border-l-2 border-border pl-4">
-            <div className="flex items-center gap-3">
-              <span className="text-blue-400 w-20">date:</span>
-              <span className="text-muted-foreground">"{formatDate(post.date)}"</span>
-            </div>
-
-            {post.category && (
-              <div className="flex items-center gap-3">
-                <span className="text-blue-400 w-20">category:</span>
-                <span className="text-green-400">"{post.category}"</span>
-              </div>
-            )}
-
-            {post.tags.length > 0 && (
-              <div className="flex items-start gap-3">
-                <span className="text-blue-400 w-20">tags:</span>
-                <div className="flex flex-wrap gap-2">
-                  <span className="text-yellow-400">[</span>
-                  {post.tags.map((tag, index) => (
-                    <span key={tag} className="text-muted-foreground">
-                      "{tag}"{index < post.tags.length - 1 && ","}
-                    </span>
-                  ))}
-                  <span className="text-yellow-400">]</span>
-                </div>
-              </div>
-            )}
-          </div>
         </header>
 
         {/* Post Content */}
