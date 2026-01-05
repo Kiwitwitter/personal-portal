@@ -9,6 +9,7 @@ import 'yet-another-react-lightbox/plugins/captions.css'
 import Counter from 'yet-another-react-lightbox/plugins/counter'
 import 'yet-another-react-lightbox/plugins/counter.css'
 import Video from 'yet-another-react-lightbox/plugins/video'
+import Zoom from 'yet-another-react-lightbox/plugins/zoom'
 import { Play, MapPin } from 'lucide-react'
 import type { GalleryImage } from '@/lib/types'
 
@@ -183,12 +184,17 @@ export function GalleryGrid({ images }: GalleryGridProps) {
         plugins={[
           Video,
           Captions,
+          Zoom,
           ...(selectedPost && selectedPost.urls.length > 1 ? [Counter] : []),
         ]}
         video={{ autoPlay: true }}
         captions={{ showToggle: true }}
         counter={{ container: { style: { top: 0, bottom: 'unset' } } }}
         carousel={{ finite: true }}
+        zoom={{
+          maxZoomPixelRatio: 3,
+          scrollToZoom: true,
+        }}
         render={{
           buttonPrev: selectedPost?.urls.length === 1 ? () => null : undefined,
           buttonNext: selectedPost?.urls.length === 1 ? () => null : undefined,
