@@ -20,16 +20,16 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Peng Zhang | Backend Engineer',
-  description: 'Backend engineer with 6 years of experience building low-latency, high-throughput distributed systems at scale. Specialized in real-time data pipelines, API platform architecture, and performance optimization.',
+  title: 'Peng Zhang',
+  description: 'A soul yearning to become interesting.',
   keywords: ['Backend Engineer', 'Distributed Systems', 'Software Engineer', 'Peng Zhang'],
   authors: [{ name: 'Peng Zhang' }],
   icons: {
     icon: '/favicon.png',
   },
   openGraph: {
-    title: 'Peng Zhang | Backend Engineer',
-    description: 'Backend engineer building distributed systems at scale.',
+    title: 'Peng Zhang',
+    description: 'A soul yearning to become interesting.',
     type: 'website',
   },
 }
