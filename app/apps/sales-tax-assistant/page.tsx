@@ -28,7 +28,7 @@ export default function SalesTaxAssistantPage() {
           <div className="bg-muted/50 rounded-lg p-6 font-mono text-sm">
             <p className="mb-4">
               Sales Tax Assistant is an iOS home screen widget that helps you instantly check sales tax rates across the United States and Canada.
-              Whether you're shopping, traveling, or just curious about local tax rates, this app provides quick and accurate information right on your home screen.
+              Whether you&apos;re shopping, traveling, or just curious about local tax rates, this app provides quick and accurate information right on your home screen.
             </p>
             <div className="border-l-2 border-green-500 pl-4 text-muted-foreground">
               <p className="mb-2"><span className="text-green-500">→</span> Supports iOS 16.0 and later</p>
@@ -78,18 +78,18 @@ export default function SalesTaxAssistantPage() {
           </h2>
           <div className="bg-muted/50 rounded-lg p-6 font-mono text-sm space-y-4">
             <div>
-              <p className="text-green-500 mb-2">// Adding a widget to your home screen:</p>
+              <p className="text-green-500 mb-2">{'// Adding a widget to your home screen:'}</p>
               <ol className="list-decimal list-inside space-y-2 text-muted-foreground pl-4">
                 <li>Long press on your home screen</li>
                 <li>Tap the <span className="text-blue-400">+</span> button in the top left</li>
-                <li>Search for <span className="text-green-400">"Sales Tax"</span></li>
+                <li>Search for <span className="text-green-400">&quot;Sales Tax&quot;</span></li>
                 <li>Select the widget size (Small, Medium, or Large)</li>
-                <li>Tap <span className="text-blue-400">"Add Widget"</span></li>
+                <li>Tap <span className="text-blue-400">&quot;Add Widget&quot;</span></li>
                 <li>Long press the widget to configure location settings</li>
               </ol>
             </div>
             <div>
-              <p className="text-green-500 mb-2">// Configuring widget mode:</p>
+              <p className="text-green-500 mb-2">{'// Configuring widget mode:'}</p>
               <ul className="list-disc list-inside space-y-2 text-muted-foreground pl-4">
                 <li><span className="font-bold">Fixed Location:</span> Set a specific location that never changes</li>
                 <li><span className="font-bold">Auto Location:</span> Widget updates based on your current GPS position</li>
@@ -106,12 +106,12 @@ export default function SalesTaxAssistantPage() {
           <div className="space-y-4">
             {[
               {
-                q: "Why isn't my widget updating?",
+                q: "Why isn&apos;t my widget updating?",
                 a: "Widgets may take a few minutes to update after first installation. Try removing and re-adding the widget, or restart your device. iOS controls widget refresh intervals to preserve battery life."
               },
               {
                 q: "Why does the app need location permission?",
-                a: "Location permission is only required for auto-location mode to fetch tax rates for your current position. If you use fixed location mode, you don't need to grant location access."
+                a: "Location permission is only required for auto-location mode to fetch tax rates for your current position. If you use fixed location mode, you don&apos;t need to grant location access."
               },
               {
                 q: "How accurate is the tax rate data?",
@@ -127,7 +127,7 @@ export default function SalesTaxAssistantPage() {
               },
               {
                 q: "How do I restore my purchase on a new device?",
-                a: "Open the app, go to Settings, and tap 'Restore Purchase'. Sign in with the same Apple ID you used for the original purchase."
+                a: "Open the app, go to Settings, and tap &apos;Restore Purchase&apos;. Sign in with the same Apple ID you used for the original purchase."
               },
               {
                 q: "What devices are supported?",
@@ -159,12 +159,12 @@ export default function SalesTaxAssistantPage() {
           </h2>
           <div className="bg-muted/50 rounded-lg p-6 font-mono text-sm space-y-4">
             <div>
-              <p className="text-red-500 font-bold mb-2">Widget shows "No Data" or error</p>
+              <p className="text-red-500 font-bold mb-2">Widget shows &quot;No Data&quot; or error</p>
               <ul className="list-disc list-inside space-y-1 text-muted-foreground pl-4">
                 <li>Check your internet connection</li>
                 <li>Verify location services are enabled (for auto-location mode)</li>
                 <li>Try removing and re-adding the widget</li>
-                <li>Ensure you're in a supported region (US or Canada)</li>
+                <li>Ensure you&apos;re in a supported region (US or Canada)</li>
               </ul>
             </div>
             <div>
@@ -179,7 +179,7 @@ export default function SalesTaxAssistantPage() {
               <p className="text-red-500 font-bold mb-2">Purchase failed or not recognized</p>
               <ul className="list-disc list-inside space-y-1 text-muted-foreground pl-4">
                 <li>Check your Apple ID payment method</li>
-                <li>Try tapping "Restore Purchase" in Settings</li>
+                <li>Try tapping &quot;Restore Purchase&quot; in Settings</li>
                 <li>Restart the app and check again</li>
                 <li>Contact Apple Support if the issue persists</li>
               </ul>
@@ -206,7 +206,7 @@ export default function SalesTaxAssistantPage() {
               <span className="text-green-500">✓</span> All data transmission uses encrypted HTTPS connections
             </p>
             <p>
-              <span className="text-green-500">✓</span> No tracking or analytics beyond Apple's standard App Store metrics
+              <span className="text-green-500">✓</span> No tracking or analytics beyond Apple&apos;s standard App Store metrics
             </p>
           </div>
         </section>
@@ -249,7 +249,7 @@ export default function SalesTaxAssistantPage() {
           </h2>
           <div className="bg-muted/50 rounded-lg p-6 font-mono text-sm space-y-4">
             <p className="text-muted-foreground mb-4">
-              Need help? Have feedback? We'd love to hear from you!
+              Need help? Have feedback? We&apos;d love to hear from you!
             </p>
             <div className="space-y-3">
               <div className="flex items-center gap-3">
@@ -266,7 +266,7 @@ export default function SalesTaxAssistantPage() {
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-blue-400">📱 App Store:</span>
-                <span className="text-muted-foreground">Search "Sales Tax Assistant"</span>
+                <span className="text-muted-foreground">Search &quot;Sales Tax Assistant&quot;</span>
               </div>
             </div>
             <div className="mt-6 pt-6 border-t border-border">
@@ -280,8 +280,8 @@ export default function SalesTaxAssistantPage() {
         {/* Footer Note */}
         <div className="border-t border-border pt-6 text-center">
           <p className="font-mono text-sm text-muted-foreground">
-            <span className="text-blue-400">const</span> <span className="text-yellow-400">version</span> = <span className="text-green-400">"1.0.0"</span>;{' '}
-            <span className="text-gray-500">// Updated January 2025</span>
+            <span className="text-blue-400">const</span> <span className="text-yellow-400">version</span> = <span className="text-green-400">&quot;1.0.0&quot;</span>;{' '}
+            <span className="text-gray-500">{'// Updated January 2025'}</span>
           </p>
           <p className="font-mono text-xs text-muted-foreground mt-2">
             Built with ❤️ using native iOS frameworks
