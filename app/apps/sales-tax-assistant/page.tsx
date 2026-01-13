@@ -254,8 +254,8 @@ export default function SalesTaxAssistantPage() {
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <span className="text-blue-400">📧 Email:</span>
-                <a href="mailto:support@pzhng.com" className="text-green-500 hover:underline">
-                  support@pzhng.com
+                <a href="mailto:luka@pzhng.com" className="text-green-500 hover:underline">
+                  luka@pzhng.com
                 </a>
               </div>
               <div className="flex items-center gap-3">
