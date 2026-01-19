@@ -109,6 +109,11 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-6 font-mono bg-clip-text text-transparent bg-gradient-to-r from-foreground to-muted-foreground">
             {post.title}
           </h1>
+          {post.excerpt && (
+            <p className="text-lg text-muted-foreground leading-relaxed">
+              {post.excerpt}
+            </p>
+          )}
         </header>
 
         {/* Post Content */}
