@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { CategoryFilter } from './CategoryFilter'
 import { TagFilter } from './TagFilter'
 import { TimelineNode } from './TimelineNode'
+import { LinkedText } from '@/components/ui/LinkedText'
 import type { BlogPost } from '@/lib/types'
 
 interface BlogListProps {
@@ -117,8 +118,8 @@ export function BlogList({ posts, categories, tags }: BlogListProps) {
                         </h3>
 
                         {post.excerpt && (
-                          <p className="text-muted-foreground line-clamp-2 text-sm leading-relaxed">
-                            {post.excerpt}
+                          <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-line">
+                            <LinkedText text={post.excerpt} asSpan />
                           </p>
                         )}
 

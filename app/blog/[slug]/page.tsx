@@ -4,32 +4,11 @@ import Link from 'next/link'
 import { ArrowLeft, Calendar, Folder, Tag } from 'lucide-react'
 import { Container } from '@/components/ui/Container'
 import { NotionRenderer } from '@/components/notion/NotionRenderer'
+import { LinkedText } from '@/components/ui/LinkedText'
 import { getBlogPosts, getBlogPostBySlug, getNotionPageContent } from '@/lib/notion'
 import { formatDate } from '@/lib/utils'
 
 export const runtime = 'edge'
-
-function renderTextWithLinks(text: string) {
-  const urlRegex = /(https?:\/\/[^\s]+)/g
-  const parts = text.split(urlRegex)
-
-  return parts.map((part, index) => {
-    if (urlRegex.test(part)) {
-      return (
-        <a
-          key={index}
-          href={part}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-primary hover:underline break-all"
-        >
-          {part}
-        </a>
-      )
-    }
-    return part
-  })
-}
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>
@@ -133,7 +112,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           </h1>
           {post.excerpt && (
             <p className="text-lg text-muted-foreground leading-relaxed whitespace-pre-line">
-              {renderTextWithLinks(post.excerpt)}
+              <LinkedText text={post.excerpt} />
             </p>
           )}
         </header>
