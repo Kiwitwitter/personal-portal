@@ -5,6 +5,7 @@ import { ArrowLeft, Calendar, Folder, Tag } from 'lucide-react'
 import { Container } from '@/components/ui/Container'
 import { NotionRenderer } from '@/components/notion/NotionRenderer'
 import { LinkedText } from '@/components/ui/LinkedText'
+import { LikeButton } from '@/components/ui/LikeButton'
 import { getBlogPosts, getBlogPostBySlug, getNotionPageContent } from '@/lib/notion'
 import { formatDate } from '@/lib/utils'
 
@@ -121,6 +122,11 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         <article className="prose prose-neutral dark:prose-invert max-w-none">
           <NotionRenderer recordMap={recordMap} rootPageId={post.id} />
         </article>
+
+        {/* Like Button */}
+        <div className="mt-12 pt-8 border-t border-border">
+          <LikeButton type="blog" id={post.slug} />
+        </div>
       </Container>
     </div>
   )

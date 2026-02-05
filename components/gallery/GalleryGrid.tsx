@@ -11,6 +11,7 @@ import 'yet-another-react-lightbox/plugins/counter.css'
 import Video from 'yet-another-react-lightbox/plugins/video'
 import Zoom from 'yet-another-react-lightbox/plugins/zoom'
 import { Play, MapPin } from 'lucide-react'
+import { LikeButton } from '@/components/ui/LikeButton'
 import type { GalleryImage } from '@/lib/types'
 
 interface GalleryGridProps {
@@ -199,10 +200,20 @@ export function GalleryGrid({ images }: GalleryGridProps) {
           buttonPrev: selectedPost?.urls.length === 1 ? () => null : undefined,
           buttonNext: selectedPost?.urls.length === 1 ? () => null : undefined,
           slideFooter: () =>
-            selectedPost?.location ? (
-              <div className="absolute bottom-4 right-4 flex items-center gap-1 text-white/80 text-sm">
-                <MapPin className="w-3 h-3" />
-                <span>{selectedPost.location}</span>
+            selectedPost ? (
+              <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
+                <LikeButton
+                  key={selectedPost.id}
+                  type="gallery"
+                  id={selectedPost.id}
+                  className="text-white/80"
+                />
+                {selectedPost.location && (
+                  <div className="flex items-center gap-1 text-white/80 text-sm">
+                    <MapPin className="w-3 h-3" />
+                    <span>{selectedPost.location}</span>
+                  </div>
+                )}
               </div>
             ) : null,
         }}

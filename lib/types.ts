@@ -1,3 +1,5 @@
+export type LikeableType = 'blog' | 'gallery'
+
 export interface BlogPost {
   id: string
   slug: string
