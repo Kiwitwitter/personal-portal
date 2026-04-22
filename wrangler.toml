@@ -11,4 +11,4 @@ NOTION_GALLERY_DATABASE_ID = "2dc460b6-4206-8060-9f46-ce40229f8e6b"
 # Then replace the id below with the output
 [[kv_namespaces]]
 binding = "LIKES"
-id = "PLACEHOLDER"
+id = "0e4a2126acae4b928cdfa304171cfdf6"
