@@ -46,6 +46,7 @@ export function NotionRenderer({ recordMap, rootPageId }: NotionRendererProps) {
       fullPage={false}
       darkMode={isDark}
       rootPageId={rootPageId}
+      showTableOfContents={false}
       components={{
         Code,
         Collection,
