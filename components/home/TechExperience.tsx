@@ -2,9 +2,19 @@ import React from 'react'
 
 const experience = [
     {
+        company: 'Google',
+        role: 'Backend SDE',
+        period: '2026 - Present',
+        hash: 'a1b2c3',
+        msg: 'feat: Google Cloud Platform One Platform',
+        details: [
+            'To Be Achieved'
+        ]
+    },
+    {
         company: 'Adobe',
         role: 'Backend SDE',
-        period: '2023 - Present',
+        period: '2023 - 2026',
         hash: '7a8b9c',
         msg: 'feat: Unified API platform & AI agents',
         details: [
