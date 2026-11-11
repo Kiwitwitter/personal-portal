@@ -1,4 +1,4 @@
-export type LikeableType = 'blog' | 'gallery'
+export type LikeableType = 'blog' | 'gallery' | 'stream'
 
 export interface BlogPost {
   id: string
@@ -18,13 +18,70 @@ export interface GalleryImage {
   caption: string
   location: string
   date: string
+  exif?: string
   published: boolean
+}
+
+export interface StreamItem {
+  id: string
+  content: string
+  createdAt: string
+  tags: string[]
+  images: string[]
+  pinned: boolean
+  published: boolean
+}
+
+export interface ExifMetadata {
+  camera?: string
+  lens?: string
+  focalLength?: string
+  aperture?: string
+  shutterSpeed?: string
+  iso?: string
+  summary?: string
 }
 
 export interface TocItem {
   id: string
   text: string
   level: 1 | 2 | 3
+}
+
+export interface BlogComment {
+  id: string
+  author: string
+  message: string
+  createdAt: string
+  colo?: string
+}
+
+export interface GuestbookEntry {
+  id: string
+  name: string
+  message: string
+  createdAt: string
+  colo?: string
+}
+
+export interface GitHubContributionDay {
+  date: string
+  count: number
+  level: 0 | 1 | 2 | 3 | 4
+}
+
+export interface GitHubCommitEvent {
+  id: string
+  repo: string
+  message: string
+  date: string
+  url: string
+}
+
+export interface GitHubStatusData {
+  totalLastYear: number
+  days: GitHubContributionDay[]
+  recentEvents: GitHubCommitEvent[]
 }
 
 export interface NotionPageProperty {
@@ -43,6 +100,7 @@ export interface NotionPageProperty {
 
 export interface NotionPage {
   id: string
+  created_time?: string
   properties: Record<string, NotionPageProperty>
   cover?: {
     file?: { url: string }

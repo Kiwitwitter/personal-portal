@@ -1,4 +1,5 @@
-import { getBlogPosts } from '@/lib/notion'
+import { getBlogPosts, getStreamPosts } from '@/lib/notion'
+import { getStreamShortId } from '@/lib/utils'
 
 export const runtime = 'edge'
 
@@ -13,28 +14,64 @@ function escapeXml(value: string): string {
     .replace(/'/g, '&apos;')
 }
 
-export async function GET() {
-  const posts = await getBlogPosts()
-  const validPosts = posts.filter((p) => Boolean(p.slug))
+interface FeedEntry {
+  title: string
+  link: string
+  guid: string
+  pubDate: Date
+  description: string
+  categories: string[]
+}
 
-  const itemsXml = validPosts
+export async function GET() {
+  const [posts, streamItems] = await Promise.all([getBlogPosts(), getStreamPosts()])
+
+  const blogEntries: FeedEntry[] = posts
+    .filter((p) => Boolean(p.slug))
     .map((post) => {
       const postUrl = `${SITE_URL}/blog/${encodeURIComponent(post.slug)}`
-      const pubDate = new Date(post.date)
-      const pubDateStr = Number.isNaN(pubDate.getTime())
-        ? new Date().toUTCString()
-        : pubDate.toUTCString()
-      const categoriesXml = [post.category, ...post.tags]
-        .filter(Boolean)
+      const parsed = new Date(post.date)
+      return {
+        title: post.title,
+        link: postUrl,
+        guid: postUrl,
+        pubDate: Number.isNaN(parsed.getTime()) ? new Date() : parsed,
+        description: post.excerpt || post.title,
+        categories: [post.category, ...post.tags].filter(Boolean),
+      }
+    })
+
+  const streamEntries: FeedEntry[] = streamItems.slice(0, 30).map((item) => {
+    const shortId = getStreamShortId(item.id)
+    const url = `${SITE_URL}/stream/${shortId}`
+    const parsed = new Date(item.createdAt)
+    const oneLine = item.content.replace(/\s+/g, ' ').trim()
+    return {
+      title: `Stream: ${oneLine.slice(0, 72)}${oneLine.length > 72 ? '...' : ''}`,
+      link: url,
+      guid: url,
+      pubDate: Number.isNaN(parsed.getTime()) ? new Date() : parsed,
+      description: item.content,
+      categories: ['Stream', ...item.tags],
+    }
+  })
+
+  const merged = [...blogEntries, ...streamEntries].sort(
+    (a, b) => b.pubDate.getTime() - a.pubDate.getTime()
+  )
+
+  const itemsXml = merged
+    .map((entry) => {
+      const categoriesXml = entry.categories
         .map((c) => `<category>${escapeXml(c)}</category>`)
         .join('')
 
       return `    <item>
-      <title>${escapeXml(post.title)}</title>
-      <link>${postUrl}</link>
-      <guid isPermaLink="true">${postUrl}</guid>
-      <pubDate>${pubDateStr}</pubDate>
-      <description>${escapeXml(post.excerpt || post.title)}</description>
+      <title>${escapeXml(entry.title)}</title>
+      <link>${entry.link}</link>
+      <guid isPermaLink="true">${entry.guid}</guid>
+      <pubDate>${entry.pubDate.toUTCString()}</pubDate>
+      <description>${escapeXml(entry.description)}</description>
       ${categoriesXml}
     </item>`
     })
@@ -43,9 +80,9 @@ export async function GET() {
   const rss = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Peng Zhang | Blog</title>
-    <link>${SITE_URL}/blog</link>
-    <description>Thoughts on software engineering, distributed systems, and life.</description>
+    <title>Peng Zhang | Blog &amp; Stream</title>
+    <link>${SITE_URL}</link>
+    <description>Articles, short engineering thoughts, and updates from Peng Zhang.</description>
     <language>en-us</language>
     <atom:link href="${SITE_URL}/feed.xml" rel="self" type="application/rss+xml"/>
 ${itemsXml}

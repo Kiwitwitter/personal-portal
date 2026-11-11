@@ -78,6 +78,17 @@ export async function withEdgeCache<T>(
   return fresh
 }
 
+export async function invalidateEdgeCache(key: string): Promise<void> {
+  const edgeCache = getDefaultEdgeCache()
+  if (!edgeCache) return
+  const cacheRequest = new Request(`https://edge-cache.pzhng.internal/${encodeURIComponent(key)}`)
+  try {
+    await edgeCache.delete(cacheRequest)
+  } catch {
+    // Ignore cache delete errors
+  }
+}
+
 async function storeInEdgeCache<T>(
   edgeCache: Cache,
   cacheRequest: Request,

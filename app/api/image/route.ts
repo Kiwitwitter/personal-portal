@@ -3,7 +3,7 @@ import { isNotionUuid, resolveNotionAssetUrl } from '@/lib/notion'
 
 export const runtime = 'edge'
 
-const VALID_KINDS = ['blog-cover', 'gallery'] as const
+const VALID_KINDS = ['blog-cover', 'gallery', 'stream'] as const
 type AssetKind = (typeof VALID_KINDS)[number]
 
 export async function GET(request: NextRequest) {
