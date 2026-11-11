@@ -1,4 +1,4 @@
-import { Github, Mail, Linkedin } from 'lucide-react'
+import { Github, Mail, Linkedin, Rss } from 'lucide-react'
 import { Container } from '@/components/ui/Container'
 
 const socialLinks = [
@@ -16,6 +16,11 @@ const socialLinks = [
     href: 'https://linkedin.com/in/pzhng',
     icon: Linkedin,
     label: 'LinkedIn',
+  },
+  {
+    href: '/feed.xml',
+    icon: Rss,
+    label: 'RSS Feed',
   },
 ]
 
@@ -38,9 +43,32 @@ export function Footer() {
             <span className="text-yellow-400">stack</span>
             <span>=</span>
             <span className="text-muted-foreground">{`{`}</span>
-            <a href="https://nextjs.org" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">&quot;Next.js&quot;</a>
+            <a
+              href="https://nextjs.org"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-primary transition-colors"
+            >
+              &quot;Next.js&quot;
+            </a>
             <span>,</span>
-            <a href="https://notion.so" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">&quot;Notion&quot;</a>
+            <a
+              href="https://notion.so"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-primary transition-colors"
+            >
+              &quot;Notion&quot;
+            </a>
+            <span>,</span>
+            <a
+              href="https://pages.cloudflare.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-primary transition-colors"
+            >
+              &quot;Cloudflare&quot;
+            </a>
             <span className="text-muted-foreground">{`}`}</span>
           </div>
 
@@ -50,7 +78,7 @@ export function Footer() {
             <span className="text-yellow-400 hidden sm:inline">socials</span>
             <span className="hidden sm:inline">=</span>
             <span className="text-muted-foreground hidden sm:inline">[</span>
-            {socialLinks.map((link, index) => (
+            {socialLinks.map((link) => (
               <a
                 key={link.label}
                 href={link.href}

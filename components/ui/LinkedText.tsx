@@ -9,16 +9,17 @@ interface LinkedTextProps {
   asSpan?: boolean // Use span instead of anchor (for nested link contexts)
 }
 
-export function LinkedText({ text, className, linkClassName, asSpan = false }: LinkedTextProps) {
-  const urlRegex = /(https?:\/\/[^\s]+)/g
-  const parts = text.split(urlRegex)
+const URL_SPLIT_REGEX = /(https?:\/\/[^\s]+)/g
+const URL_EXACT_REGEX = /^https?:\/\/[^\s]+$/
 
+export function LinkedText({ text, className, linkClassName, asSpan = false }: LinkedTextProps) {
+  const parts = text.split(URL_SPLIT_REGEX)
   const defaultLinkClass = 'text-primary hover:underline break-all'
 
   return (
     <span className={className}>
       {parts.map((part, index) => {
-        if (urlRegex.test(part)) {
+        if (URL_EXACT_REGEX.test(part)) {
           if (asSpan) {
             return (
               <span

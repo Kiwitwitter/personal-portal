@@ -2,7 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+:root,
+.dark {
   --background: #0a0a0a;
   --foreground: #f0f0f0;
   --card: #121212;
@@ -15,21 +16,6 @@
   --muted-foreground: #a0a0a0;
   --accent: #f59e0b;
   /* Warning/Accent Yellow */
-  --border: #27272a;
-  --input: #27272a;
-  --ring: #4ade80;
-}
-
-.dark {
-  --background: #0a0a0a;
-  --foreground: #f0f0f0;
-  --card: #121212;
-  --card-foreground: #f0f0f0;
-  --primary: #4ade80;
-  --secondary: #3b82f6;
-  --muted: #1e1e1e;
-  --muted-foreground: #a0a0a0;
-  --accent: #f59e0b;
   --border: #3f3f46;
   --input: #27272a;
   --ring: #4ade80;
@@ -43,6 +29,7 @@
 
 html {
   scroll-behavior: smooth;
+  color-scheme: dark;
 }
 
 body {
@@ -50,7 +37,6 @@ body {
   color: var(--foreground);
   font-family: var(--font-inter), system-ui, sans-serif;
   min-height: 100vh;
-  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Scrollbar styles */
@@ -75,7 +61,7 @@ body {
 /* Selection */
 ::selection {
   background-color: var(--primary);
-  color: white;
+  color: #0a0a0a;
 }
 
 /* Links */
@@ -103,28 +89,65 @@ a {
   max-width: 100% !important;
 }
 
-/* Hide the default notion title since we have our custom one */
+/* Hide the default notion title since we render our custom terminal header */
 .notion-title {
   display: none !important;
 }
 
-/* Hide the first H1 block if it mimics the title (common in Notion exports) */
-.notion-page-content>.notion-h1:first-child,
-.notion-page-content>.notion-h:first-child {
+/* Hide only a leading H1 block if it duplicates the post title (preserve H2/H3 section headings) */
+.notion-page-content > .notion-h1:first-child {
   display: none !important;
+}
+
+/* Offset anchor scroll target below sticky navbar */
+.notion-header-anchor {
+  scroll-margin-top: 5.5rem;
 }
 
 .notion-code {
   font-family: var(--font-jetbrains-mono), monospace !important;
   background: var(--muted) !important;
+  border: 1px solid var(--border) !important;
   border-radius: 0.5rem;
 }
 
-/* Adjust text colors for better contrast in dark mode */
+/* Style Notion code block copy button in terminal aesthetic */
+.notion-code-copy {
+  top: 0.65rem !important;
+  right: 0.65rem !important;
+}
+
+.notion-code-copy-button {
+  background: rgba(18, 18, 18, 0.9) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--muted-foreground) !important;
+  border-radius: 0.375rem !important;
+  padding: 0.35rem !important;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.notion-code-copy-button:hover {
+  border-color: var(--primary) !important;
+  color: var(--primary) !important;
+}
+
+.notion-code-copy-tooltip > div {
+  font-family: var(--font-jetbrains-mono), monospace !important;
+  background: var(--card) !important;
+  color: var(--primary) !important;
+  border: 1px solid var(--primary) !important;
+  border-radius: 0.25rem !important;
+  padding: 0.15rem 0.45rem !important;
+  font-size: 0.7rem !important;
+}
+
+/* Adjust text colors for crisp contrast in dark mode */
 .dark .notion-text,
 .dark .notion-h1,
 .dark .notion-h2,
-.dark .notion-h3 {
+.dark .notion-h3,
+.dark .notion-list {
   color: var(--foreground) !important;
 }
 

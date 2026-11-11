@@ -3,8 +3,9 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
-import { Menu, X, Github, Mail, Linkedin, FileText } from 'lucide-react'
+import { Menu, X, Github, Mail, Linkedin, FileText, Search } from 'lucide-react'
 import { Container } from '@/components/ui/Container'
+import { triggerCommandPalette } from '@/components/ui/CommandPalette'
 import { cn } from '@/lib/utils'
 
 const navLinks = [
@@ -31,6 +32,11 @@ const socialLinks = [
   },
 ]
 
+function isNavActive(pathname: string, href: string): boolean {
+  if (href === '/') return pathname === '/'
+  return pathname === href || pathname.startsWith(`${href}/`)
+}
+
 export function Navbar() {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -49,11 +55,11 @@ export function Navbar() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-6">
             {/* Nav Links */}
             <div className="flex items-center gap-6">
               {navLinks.map((link) => {
-                const isActive = pathname === link.href
+                const isActive = isNavActive(pathname, link.href)
                 return (
                   <Link
                     key={link.href}
@@ -77,8 +83,22 @@ export function Navbar() {
               })}
             </div>
 
+            {/* Command Palette Trigger */}
+            <button
+              type="button"
+              onClick={triggerCommandPalette}
+              className="flex items-center gap-2 px-2.5 py-1 text-xs font-mono text-muted-foreground border border-border rounded-md bg-muted/40 hover:border-primary/40 hover:text-foreground transition-colors"
+              aria-label="Open command palette (Cmd+K)"
+            >
+              <Search className="w-3.5 h-3.5 text-primary" />
+              <span>Search</span>
+              <kbd className="px-1.5 py-0.5 text-[10px] rounded bg-background border border-border text-muted-foreground">
+                ⌘K
+              </kbd>
+            </button>
+
             {/* Social Links */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               {socialLinks.map((link) => (
                 <a
                   key={link.label}
@@ -105,8 +125,16 @@ export function Navbar() {
             </a>
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="flex items-center gap-4 md:hidden">
+          {/* Mobile Actions */}
+          <div className="flex items-center gap-2 md:hidden">
+            <button
+              type="button"
+              onClick={triggerCommandPalette}
+              className="p-2 text-muted-foreground hover:text-primary transition-colors"
+              aria-label="Search"
+            >
+              <Search className="w-5 h-5" />
+            </button>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 text-foreground"
@@ -125,21 +153,22 @@ export function Navbar() {
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-border py-4">
             <div className="flex flex-col gap-4">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={cn(
-                    'text-sm font-medium transition-colors hover:text-primary font-mono',
-                    pathname === link.href
-                      ? 'text-primary'
-                      : 'text-muted-foreground'
-                  )}
-                >
-                  {link.label}
-                </Link>
-              ))}
+              {navLinks.map((link) => {
+                const isActive = isNavActive(pathname, link.href)
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={cn(
+                      'text-sm font-medium transition-colors hover:text-primary font-mono',
+                      isActive ? 'text-primary' : 'text-muted-foreground'
+                    )}
+                  >
+                    {isActive ? `[ ${link.label} ]` : link.label}
+                  </Link>
+                )
+              })}
 
               <hr className="border-border" />
 
@@ -167,7 +196,7 @@ export function Navbar() {
                 className="flex items-center gap-2 px-3 py-2 text-sm font-medium border border-border rounded-lg hover:bg-muted transition-colors w-fit font-mono"
               >
                 <FileText className="w-4 h-4" />
-                CV
+                ./cv.pdf
               </a>
             </div>
           </div>

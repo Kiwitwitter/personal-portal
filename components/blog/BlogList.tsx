@@ -6,6 +6,7 @@ import { CategoryFilter } from './CategoryFilter'
 import { TagFilter } from './TagFilter'
 import { TimelineNode } from './TimelineNode'
 import { LinkedText } from '@/components/ui/LinkedText'
+import { formatTechDate, getDateYear } from '@/lib/utils'
 import type { BlogPost } from '@/lib/types'
 
 interface BlogListProps {
@@ -14,11 +15,11 @@ interface BlogListProps {
   tags: string[]
 }
 
-// Group posts by year
+// Group posts by UTC-safe calendar year
 function groupPostsByYear(posts: BlogPost[]): Record<string, BlogPost[]> {
   const groups: Record<string, BlogPost[]> = {}
   for (const post of posts) {
-    const year = new Date(post.date).getFullYear().toString()
+    const year = getDateYear(post.date)
     if (!groups[year]) {
       groups[year] = []
     }
@@ -27,25 +28,15 @@ function groupPostsByYear(posts: BlogPost[]): Record<string, BlogPost[]> {
   return groups
 }
 
-// Format date as "Mon DD" (e.g., "Jan 02")
-function formatTechDate(dateString: string): string {
-  const date = new Date(dateString)
-  const day = date.getDate().toString().padStart(2, '0')
-  const month = date.toLocaleDateString('en-US', { month: 'short' })
-  return `${month} ${day}`
-}
-
 export function BlogList({ posts, categories, tags }: BlogListProps) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [selectedTags, setSelectedTags] = useState<string[]>([])
 
   const filteredPosts = useMemo(() => {
     return posts.filter((post) => {
-      // Filter by category
       if (selectedCategory && post.category !== selectedCategory) {
         return false
       }
-      // Filter by tags (must have ALL selected tags)
       if (selectedTags.length > 0) {
         const hasAllTags = selectedTags.every((tag) => post.tags.includes(tag))
         if (!hasAllTags) return false
@@ -91,7 +82,9 @@ export function BlogList({ posts, categories, tags }: BlogListProps) {
             <div key={year} className="relative">
               {/* Year Marker */}
               <div className="flex items-center gap-4 mb-8 -ml-1">
-                <div className="w-16 sm:w-20 text-right font-mono font-bold text-2xl text-muted-foreground/50">{year}</div>
+                <div className="w-16 sm:w-20 text-right font-mono font-bold text-2xl text-muted-foreground/50">
+                  {year}
+                </div>
               </div>
 
               {/* Posts for this year */}

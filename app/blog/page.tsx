@@ -1,21 +1,22 @@
 import { Metadata } from 'next'
 import { Container } from '@/components/ui/Container'
 import { BlogList } from '@/components/blog/BlogList'
-import { getBlogPosts, getCategories, getTags } from '@/lib/notion'
+import { getBlogPosts, extractCategories, extractTags } from '@/lib/notion'
 
 export const runtime = 'edge'
 
 export const metadata: Metadata = {
   title: 'Blog | Peng Zhang',
-  description: 'Blog posts, projects, and notes about my thought and work.',
+  description: 'Blog posts, projects, and notes about my thoughts and work.',
+  alternates: {
+    canonical: '/blog',
+  },
 }
 
 export default async function BlogPage() {
-  const [posts, categories, tags] = await Promise.all([
-    getBlogPosts(),
-    getCategories(),
-    getTags(),
-  ])
+  const posts = await getBlogPosts()
+  const categories = extractCategories(posts)
+  const tags = extractTags(posts)
 
   return (
     <div className="py-16">
@@ -27,7 +28,12 @@ export default async function BlogPage() {
           </div>
           <h1 className="text-4xl font-bold tracking-tight mb-4 font-mono">Blog</h1>
           <p className="text-lg text-muted-foreground font-mono">
-            <span className="text-blue-400">const</span> <span className="text-yellow-400">articles</span> = <span className="text-green-400">&quot;thoughts on software engineering and distributed systems&quot;</span>;
+            <span className="text-blue-400">const</span>{' '}
+            <span className="text-yellow-400">articles</span> ={' '}
+            <span className="text-green-400">
+              &quot;thoughts on software engineering and distributed systems&quot;
+            </span>
+            ;
           </p>
         </div>
 

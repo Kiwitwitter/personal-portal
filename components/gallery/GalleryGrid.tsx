@@ -12,6 +12,7 @@ import Video from 'yet-another-react-lightbox/plugins/video'
 import Zoom from 'yet-another-react-lightbox/plugins/zoom'
 import { Play, MapPin } from 'lucide-react'
 import { LikeButton } from '@/components/ui/LikeButton'
+import { formatShortDate } from '@/lib/utils'
 import type { GalleryImage } from '@/lib/types'
 
 interface GalleryGridProps {
@@ -21,16 +22,25 @@ interface GalleryGridProps {
 const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.ogg', '.mov']
 const PRIORITY_COUNT = 12
 
+function extractMediaExt(url: string): string {
+  const [pathname, query = ''] = url.split('?')
+  const params = new URLSearchParams(query)
+  const extParam = params.get('ext')?.toLowerCase()
+  if (extParam) return extParam
+  const lowerPath = pathname.toLowerCase()
+  const matched = VIDEO_EXTENSIONS.find((ext) => lowerPath.endsWith(ext))
+  return matched || ''
+}
+
 function isVideo(url: string): boolean {
-  const urlWithoutQuery = url.split('?')[0].toLowerCase()
-  return VIDEO_EXTENSIONS.some((ext) => urlWithoutQuery.endsWith(ext))
+  const ext = extractMediaExt(url)
+  return VIDEO_EXTENSIONS.includes(ext)
 }
 
 function getVideoType(url: string): string {
-  const urlWithoutQuery = url.split('?')[0].toLowerCase()
-  if (urlWithoutQuery.endsWith('.webm')) return 'video/webm'
-  if (urlWithoutQuery.endsWith('.ogg')) return 'video/ogg'
-  if (urlWithoutQuery.endsWith('.mov')) return 'video/mp4'
+  const ext = extractMediaExt(url)
+  if (ext === '.webm') return 'video/webm'
+  if (ext === '.ogg') return 'video/ogg'
   return 'video/mp4'
 }
 
@@ -125,11 +135,7 @@ function GalleryItem({ image, index, onClick }: GalleryItemProps) {
         )}
         {image.date && (
           <p className="text-white/70 text-xs text-center px-2 mt-1">
-            {new Date(image.date).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-            })}
+            {formatShortDate(image.date)}
           </p>
         )}
         {image.location && (
@@ -160,8 +166,6 @@ export function GalleryGrid({ images }: GalleryGridProps) {
         description: post.caption,
       }
     })
-
-  const hasVideo = (post: GalleryImage) => post.urls.some(isVideo)
 
   return (
     <>
