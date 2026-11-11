@@ -12,6 +12,8 @@ const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/blog', label: 'Blog' },
   { href: '/gallery', label: 'Gallery' },
+  { href: '/now', label: 'Now' },
+  { href: '/guestbook', label: 'Guestbook' },
 ]
 
 const socialLinks = [

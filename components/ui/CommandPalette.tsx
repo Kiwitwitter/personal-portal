@@ -9,6 +9,8 @@ import {
   BookOpen,
   Image as ImageIcon,
   Smartphone,
+  Activity,
+  TerminalSquare,
   Github,
   Linkedin,
   Mail,
@@ -33,6 +35,7 @@ interface SearchPostItem {
   category: string
   tags: string[]
   excerpt: string
+  bodyText?: string
 }
 
 interface CommandItem {
@@ -40,9 +43,25 @@ interface CommandItem {
   group: 'Navigation' | 'Blog Posts' | 'Links & Actions'
   title: string
   subtitle?: string
+  bodyText?: string
   keywords?: string
   icon: React.ComponentType<{ className?: string }>
   onSelect: () => void
+}
+
+function buildBodyMatchSnippet(bodyText: string | undefined, query: string): string | null {
+  if (!bodyText || !query.trim()) return null
+  const firstTerm = query.trim().toLowerCase().split(/\s+/)[0]
+  if (!firstTerm || firstTerm.length < 2) return null
+
+  const idx = bodyText.toLowerCase().indexOf(firstTerm)
+  if (idx === -1) return null
+
+  const start = Math.max(0, idx - 36)
+  const end = Math.min(bodyText.length, idx + firstTerm.length + 56)
+  const prefix = start > 0 ? '...' : ''
+  const suffix = end < bodyText.length ? '...' : ''
+  return `grep: "${prefix}${bodyText.slice(start, end).trim()}${suffix}"`
 }
 
 let cachedPosts: SearchPostItem[] | null = null
@@ -93,7 +112,7 @@ export function CommandPalette() {
     }
   }, [openPalette])
 
-  // Lazy-fetch blog index when first opened
+  // Lazy-fetch full-text blog index when first opened
   useEffect(() => {
     if (!open) return
     const timer = setTimeout(() => inputRef.current?.focus(), 10)
@@ -121,7 +140,7 @@ export function CommandPalette() {
         id: 'nav-home',
         group: 'Navigation',
         title: 'cd ~ (Home)',
-        subtitle: 'About, experience, skills & interactive shell',
+        subtitle: 'About, experience, GitHub heatmap & AI terminal',
         keywords: 'home about experience skills education',
         icon: Home,
         onSelect: () => router.push('/'),
@@ -139,10 +158,28 @@ export function CommandPalette() {
         id: 'nav-gallery',
         group: 'Navigation',
         title: 'cd ./gallery',
-        subtitle: 'Photography & life moments',
-        keywords: 'gallery photos pictures camera',
+        subtitle: 'Photography grid, world footprint map & EXIF',
+        keywords: 'gallery photos pictures camera map exif',
         icon: ImageIcon,
         onSelect: () => router.push('/gallery'),
+      },
+      {
+        id: 'nav-now',
+        group: 'Navigation',
+        title: 'systemctl status (/now)',
+        subtitle: 'What I am currently working on & exploring',
+        keywords: 'now status current focus',
+        icon: Activity,
+        onSelect: () => router.push('/now'),
+      },
+      {
+        id: 'nav-guestbook',
+        group: 'Navigation',
+        title: 'tail -f ./guestbook.log',
+        subtitle: 'Read or sign the edge terminal guestbook',
+        keywords: 'guestbook log sign message visitors',
+        icon: TerminalSquare,
+        onSelect: () => router.push('/guestbook'),
       },
       {
         id: 'nav-sales-tax',
@@ -166,7 +203,10 @@ export function CommandPalette() {
       ]
         .filter(Boolean)
         .join(' · '),
-      keywords: `${post.slug} ${post.category} ${post.tags.join(' ')} ${post.excerpt}`,
+      bodyText: post.bodyText,
+      keywords: `${post.slug} ${post.category} ${post.tags.join(' ')} ${post.excerpt} ${
+        post.bodyText || ''
+      }`,
       icon: FileText,
       onSelect: () => router.push(`/blog/${post.slug}`),
     }))
@@ -291,14 +331,14 @@ export function CommandPalette() {
         {/* Search Input Header */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-muted/40">
           <Search className="w-4 h-4 text-primary shrink-0" />
-          <span className="text-primary text-sm shrink-0">grep</span>
+          <span className="text-primary text-sm shrink-0">grep -ri</span>
           <input
             ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleInputKeyDown}
-            placeholder="Search posts, pages, or commands..."
+            placeholder="Full-text grep across posts, pages & commands..."
             className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
           />
           {loadingPosts && (
@@ -317,7 +357,8 @@ export function CommandPalette() {
         <div ref={listRef} className="max-h-[60vh] overflow-y-auto p-2">
           {filteredItems.length === 0 ? (
             <div className="py-12 text-center text-sm text-muted-foreground">
-              <span className="text-red-400">0 matches:</span> No command or post matching &quot;{query}&quot;
+              <span className="text-red-400">0 matches:</span> No command or article text matching
+              &quot;{query}&quot;
             </div>
           ) : (
             groups.map((groupName) => {
@@ -334,6 +375,11 @@ export function CommandPalette() {
                       const flatIndex = filteredItems.indexOf(item)
                       const isSelected = flatIndex === activeIndex
                       const Icon = item.icon
+                      const snippet =
+                        query.trim().length >= 2 &&
+                        !item.title.toLowerCase().includes(query.trim().toLowerCase())
+                          ? buildBodyMatchSnippet(item.bodyText, query)
+                          : null
 
                       return (
                         <button
@@ -363,9 +409,13 @@ export function CommandPalette() {
                             >
                               {item.title}
                             </div>
-                            {item.subtitle && (
+                            {(snippet || item.subtitle) && (
                               <div className="text-xs text-muted-foreground truncate mt-0.5">
-                                {item.subtitle}
+                                {snippet ? (
+                                  <span className="text-green-400/90">{snippet}</span>
+                                ) : (
+                                  item.subtitle
+                                )}
                               </div>
                             )}
                           </div>
@@ -395,7 +445,7 @@ export function CommandPalette() {
               <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border">esc</kbd> close
             </span>
           </div>
-          <span className="hidden sm:inline text-muted-foreground/60">~/pzhng</span>
+          <span className="hidden sm:inline text-muted-foreground/60">full-text grep</span>
         </div>
       </div>
     </div>

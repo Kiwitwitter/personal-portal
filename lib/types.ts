@@ -18,13 +18,67 @@ export interface GalleryImage {
   caption: string
   location: string
   date: string
+  exif?: string
   published: boolean
+}
+
+export interface GeoLocationGroup {
+  location: string
+  lat: number
+  lng: number
+  imageIds: string[]
+}
+
+export interface ExifMetadata {
+  camera?: string
+  lens?: string
+  focalLength?: string
+  aperture?: string
+  shutterSpeed?: string
+  iso?: string
+  summary?: string
 }
 
 export interface TocItem {
   id: string
   text: string
   level: 1 | 2 | 3
+}
+
+export interface BlogComment {
+  id: string
+  author: string
+  message: string
+  createdAt: string
+  colo?: string
+}
+
+export interface GuestbookEntry {
+  id: string
+  name: string
+  message: string
+  createdAt: string
+  colo?: string
+}
+
+export interface GitHubContributionDay {
+  date: string
+  count: number
+  level: 0 | 1 | 2 | 3 | 4
+}
+
+export interface GitHubCommitEvent {
+  id: string
+  repo: string
+  message: string
+  date: string
+  url: string
+}
+
+export interface GitHubStatusData {
+  totalLastYear: number
+  days: GitHubContributionDay[]
+  recentEvents: GitHubCommitEvent[]
 }
 
 export interface NotionPageProperty {

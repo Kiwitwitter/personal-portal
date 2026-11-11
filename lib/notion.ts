@@ -12,9 +12,10 @@ const notion = new Client({
 // Unofficial client for rendering full pages with react-notion-x
 const notionAPI = new NotionAPI()
 
-// Database IDs from environment
+// Database & Page IDs from environment
 const BLOG_DATABASE_ID = process.env.NOTION_BLOG_DATABASE_ID || ''
 const GALLERY_DATABASE_ID = process.env.NOTION_GALLERY_DATABASE_ID || ''
+const NOW_PAGE_ID = process.env.NOTION_NOW_PAGE_ID || ''
 
 const UUID_REGEX = /^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i
 
@@ -233,6 +234,19 @@ export const getNotionPageContent = cache(async (pageId: string) => {
 })
 
 /**
+ * Get the optional Notion /now page content if NOTION_NOW_PAGE_ID is configured
+ */
+export const getNowPageContent = cache(async () => {
+  if (!NOW_PAGE_ID) {
+    return null
+  }
+  return {
+    pageId: NOW_PAGE_ID,
+    recordMap: await getNotionPageContent(NOW_PAGE_ID),
+  }
+})
+
+/**
  * Get all gallery images from Notion database
  */
 export const getGalleryImages = cache(async (): Promise<GalleryImage[]> => {
@@ -242,7 +256,7 @@ export const getGalleryImages = cache(async (): Promise<GalleryImage[]> => {
   }
 
   return withEdgeCache(
-    'notion:gallery-images:v2',
+    'notion:gallery-images:v3',
     async () => {
       try {
         const response = await notion.databases.query({
@@ -351,6 +365,10 @@ function parseNotionPageToBlogPost(page: NotionPage): BlogPost {
 function parseNotionPageToGalleryImage(page: NotionPage): GalleryImage {
   const properties = page.properties
   const rawUrls = getRawFilesProperty(properties.Image)
+  const manualExif =
+    getTextProperty(properties.EXIF) ||
+    getTextProperty(properties.Camera) ||
+    getTextProperty(properties.Specs)
 
   return {
     id: page.id,
@@ -358,6 +376,7 @@ function parseNotionPageToGalleryImage(page: NotionPage): GalleryImage {
     caption: getTextProperty(properties.Caption),
     location: getTextProperty(properties.Location),
     date: getDateProperty(properties.Date),
+    exif: manualExif || undefined,
     published: getCheckboxProperty(properties.Published),
   }
 }

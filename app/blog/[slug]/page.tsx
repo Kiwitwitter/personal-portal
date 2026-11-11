@@ -5,6 +5,10 @@ import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { Container } from '@/components/ui/Container'
 import { NotionRenderer } from '@/components/notion/NotionRenderer'
 import { TableOfContents } from '@/components/blog/TableOfContents'
+import { ReadingProgress } from '@/components/blog/ReadingProgress'
+import { ViewCounter } from '@/components/blog/ViewCounter'
+import { PostSummarizer } from '@/components/blog/PostSummarizer'
+import { TerminalComments } from '@/components/blog/TerminalComments'
 import { LinkedText } from '@/components/ui/LinkedText'
 import { LikeButton } from '@/components/ui/LikeButton'
 import {
@@ -105,6 +109,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
   return (
     <div className="py-16">
+      <ReadingProgress />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -127,7 +132,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         >
           <div className="min-w-0">
             {/* Post Header */}
-            <header className="mb-10 border-b border-border pb-8">
+            <header className="mb-8 border-b border-border pb-8">
               {/* Terminal Header */}
               <div className="border border-border bg-card/50 rounded-lg p-6 mb-8 font-mono text-sm relative overflow-hidden group">
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary/20 to-transparent opacity-50" />
@@ -158,6 +163,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                         <span className="text-blue-300">readTime:</span>{' '}
                         <span className="text-green-400">&quot;{readingMinutes} min read&quot;</span>,
                       </div>
+                      <ViewCounter slug={post.slug} />
                       {post.category && (
                         <div>
                           <span className="text-blue-300">category:</span>{' '}
@@ -193,6 +199,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 </p>
               )}
             </header>
+
+            {/* AI Article Summarizer */}
+            <PostSummarizer slug={post.slug} />
 
             {/* Collapsible inline TOC for mobile / tablet */}
             {hasToc && (
@@ -272,6 +281,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 </nav>
               )}
             </div>
+
+            {/* Native Terminal Comments */}
+            <TerminalComments slug={post.slug} />
           </div>
 
           {/* Sticky Sidebar TOC for wide desktop viewports */}

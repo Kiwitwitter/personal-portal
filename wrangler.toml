@@ -12,3 +12,6 @@ NOTION_GALLERY_DATABASE_ID = "2dc460b6-4206-8060-9f46-ce40229f8e6b"
 [[kv_namespaces]]
 binding = "LIKES"
 id = "0e4a2126acae4b928cdfa304171cfdf6"
+
+[ai]
+binding = "AI"

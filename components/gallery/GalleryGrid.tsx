@@ -10,10 +10,10 @@ import Counter from 'yet-another-react-lightbox/plugins/counter'
 import 'yet-another-react-lightbox/plugins/counter.css'
 import Video from 'yet-another-react-lightbox/plugins/video'
 import Zoom from 'yet-another-react-lightbox/plugins/zoom'
-import { Play, MapPin } from 'lucide-react'
+import { Play, MapPin, Aperture } from 'lucide-react'
 import { LikeButton } from '@/components/ui/LikeButton'
 import { formatShortDate } from '@/lib/utils'
-import type { GalleryImage } from '@/lib/types'
+import type { ExifMetadata, GalleryImage } from '@/lib/types'
 
 interface GalleryGridProps {
   images: GalleryImage[]
@@ -21,6 +21,7 @@ interface GalleryGridProps {
 
 const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.ogg', '.mov']
 const PRIORITY_COUNT = 12
+const exifClientCache = new Map<string, string | null>()
 
 function extractMediaExt(url: string): string {
   const [pathname, query = ''] = url.split('?')
@@ -151,6 +152,50 @@ function GalleryItem({ image, index, onClick }: GalleryItemProps) {
 
 export function GalleryGrid({ images }: GalleryGridProps) {
   const [selectedPost, setSelectedPost] = useState<GalleryImage | null>(null)
+  const [slideIndex, setSlideIndex] = useState(0)
+  const [exifSummary, setExifSummary] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!selectedPost) {
+      setExifSummary(null)
+      return
+    }
+
+    if (selectedPost.exif) {
+      setExifSummary(selectedPost.exif)
+      return
+    }
+
+    const activeUrl = selectedPost.urls[slideIndex] || ''
+    if (!activeUrl || isVideo(activeUrl)) {
+      setExifSummary(null)
+      return
+    }
+
+    const cacheKey = `${selectedPost.id}:${slideIndex}`
+    if (exifClientCache.has(cacheKey)) {
+      setExifSummary(exifClientCache.get(cacheKey) || null)
+      return
+    }
+
+    let cancelled = false
+    setExifSummary(null)
+
+    fetch(`/api/exif?id=${encodeURIComponent(selectedPost.id)}&index=${slideIndex}`)
+      .then((res) => res.json())
+      .then((data: { exif?: ExifMetadata | null }) => {
+        const summary = data.exif?.summary || null
+        exifClientCache.set(cacheKey, summary)
+        if (!cancelled) {
+          setExifSummary(summary)
+        }
+      })
+      .catch(() => {})
+
+    return () => {
+      cancelled = true
+    }
+  }, [selectedPost, slideIndex])
 
   const getSlides = (post: GalleryImage) =>
     post.urls.map((url) => {
@@ -176,7 +221,10 @@ export function GalleryGrid({ images }: GalleryGridProps) {
             key={image.id}
             image={image}
             index={index}
-            onClick={() => setSelectedPost(image)}
+            onClick={() => {
+              setSlideIndex(0)
+              setSelectedPost(image)
+            }}
           />
         ))}
       </div>
@@ -186,6 +234,9 @@ export function GalleryGrid({ images }: GalleryGridProps) {
         open={selectedPost !== null}
         close={() => setSelectedPost(null)}
         slides={selectedPost ? getSlides(selectedPost) : []}
+        on={{
+          view: ({ index }) => setSlideIndex(index),
+        }}
         plugins={[
           Video,
           Captions,
@@ -205,19 +256,36 @@ export function GalleryGrid({ images }: GalleryGridProps) {
           buttonNext: selectedPost?.urls.length === 1 ? () => null : undefined,
           slideFooter: () =>
             selectedPost ? (
-              <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
-                <LikeButton
-                  key={selectedPost.id}
-                  type="gallery"
-                  id={selectedPost.id}
-                  className="text-white/80"
-                />
-                {selectedPost.location && (
-                  <div className="flex items-center gap-1 text-white/80 text-sm">
-                    <MapPin className="w-3 h-3" />
-                    <span>{selectedPost.location}</span>
-                  </div>
-                )}
+              <div className="absolute bottom-4 left-4 right-4 flex flex-wrap items-center justify-between gap-3 pointer-events-auto">
+                <div className="flex items-center gap-3">
+                  <LikeButton
+                    key={selectedPost.id}
+                    type="gallery"
+                    id={selectedPost.id}
+                    className="text-white/80"
+                  />
+                  {exifSummary && (
+                    <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-black/70 border border-white/15 font-mono text-xs text-green-400">
+                      <Aperture className="w-3.5 h-3.5 shrink-0" />
+                      <span>{exifSummary}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3">
+                  {exifSummary && (
+                    <div className="sm:hidden inline-flex items-center gap-1 px-2 py-0.5 rounded bg-black/70 border border-white/15 font-mono text-[11px] text-green-400">
+                      <Aperture className="w-3 h-3 shrink-0" />
+                      <span>{exifSummary}</span>
+                    </div>
+                  )}
+                  {selectedPost.location && (
+                    <div className="flex items-center gap-1 text-white/80 text-sm font-mono">
+                      <MapPin className="w-3.5 h-3.5 text-primary" />
+                      <span>{selectedPost.location}</span>
+                    </div>
+                  )}
+                </div>
               </div>
             ) : null,
         }}
