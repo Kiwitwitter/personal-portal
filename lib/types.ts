@@ -21,6 +21,12 @@ export interface GalleryImage {
   published: boolean
 }
 
+export interface TocItem {
+  id: string
+  text: string
+  level: 1 | 2 | 3
+}
+
 export interface NotionPageProperty {
   type: string
   title?: Array<{ plain_text: string }>
