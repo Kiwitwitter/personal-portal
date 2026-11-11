@@ -8,6 +8,7 @@ export const runtime = 'edge'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
+  const kind = searchParams.get('kind') === 'stream' ? 'stream' : 'gallery'
   const id = searchParams.get('id') || ''
   const index = Number.parseInt(searchParams.get('index') || '0', 10)
 
@@ -16,10 +17,10 @@ export async function GET(request: NextRequest) {
   }
 
   const exif = await withEdgeCache<ExifMetadata | null>(
-    `exif:v1:${id.replace(/-/g, '').toLowerCase()}:${index}`,
+    `exif:v1:${kind}:${id.replace(/-/g, '').toLowerCase()}:${index}`,
     async () => {
       try {
-        const assetUrl = await resolveNotionAssetUrl('gallery', id, index)
+        const assetUrl = await resolveNotionAssetUrl(kind, id, index)
         if (!assetUrl) return null
 
         // Skip video extensions

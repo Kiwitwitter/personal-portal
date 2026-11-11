@@ -1,4 +1,4 @@
-export type LikeableType = 'blog' | 'gallery'
+export type LikeableType = 'blog' | 'gallery' | 'stream'
 
 export interface BlogPost {
   id: string
@@ -22,11 +22,14 @@ export interface GalleryImage {
   published: boolean
 }
 
-export interface GeoLocationGroup {
-  location: string
-  lat: number
-  lng: number
-  imageIds: string[]
+export interface StreamItem {
+  id: string
+  content: string
+  createdAt: string
+  tags: string[]
+  images: string[]
+  pinned: boolean
+  published: boolean
 }
 
 export interface ExifMetadata {
@@ -97,6 +100,7 @@ export interface NotionPageProperty {
 
 export interface NotionPage {
   id: string
+  created_time?: string
   properties: Record<string, NotionPageProperty>
   cover?: {
     file?: { url: string }

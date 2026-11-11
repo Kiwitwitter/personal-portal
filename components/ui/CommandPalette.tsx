@@ -7,9 +7,9 @@ import {
   FileText,
   Home,
   BookOpen,
+  Radio,
   Image as ImageIcon,
   Smartphone,
-  Activity,
   TerminalSquare,
   Github,
   Linkedin,
@@ -38,9 +38,16 @@ interface SearchPostItem {
   bodyText?: string
 }
 
+interface SearchStreamItem {
+  id: string
+  content: string
+  createdAt: string
+  tags: string[]
+}
+
 interface CommandItem {
   id: string
-  group: 'Navigation' | 'Blog Posts' | 'Links & Actions'
+  group: 'Navigation' | 'Stream' | 'Blog Posts' | 'Links & Actions'
   title: string
   subtitle?: string
   bodyText?: string
@@ -64,14 +71,15 @@ function buildBodyMatchSnippet(bodyText: string | undefined, query: string): str
   return `grep: "${prefix}${bodyText.slice(start, end).trim()}${suffix}"`
 }
 
-let cachedPosts: SearchPostItem[] | null = null
+let cachedIndex: { posts: SearchPostItem[]; streams: SearchStreamItem[] } | null = null
 
 export function CommandPalette() {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [activeIndex, setActiveIndex] = useState(0)
-  const [posts, setPosts] = useState<SearchPostItem[]>(cachedPosts || [])
+  const [posts, setPosts] = useState<SearchPostItem[]>(cachedIndex?.posts || [])
+  const [streams, setStreams] = useState<SearchStreamItem[]>(cachedIndex?.streams || [])
   const [loadingPosts, setLoadingPosts] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
@@ -112,20 +120,21 @@ export function CommandPalette() {
     }
   }, [openPalette])
 
-  // Lazy-fetch full-text blog index when first opened
+  // Lazy-fetch full-text blog + stream index when first opened
   useEffect(() => {
     if (!open) return
     const timer = setTimeout(() => inputRef.current?.focus(), 10)
 
-    if (!cachedPosts && !loadingPosts) {
+    if (!cachedIndex && !loadingPosts) {
       setLoadingPosts(true)
       fetch('/api/search')
         .then((res) => res.json())
-        .then((data: { posts?: SearchPostItem[] }) => {
-          if (Array.isArray(data.posts)) {
-            cachedPosts = data.posts
-            setPosts(data.posts)
-          }
+        .then((data: { posts?: SearchPostItem[]; streams?: SearchStreamItem[] }) => {
+          const loadedPosts = Array.isArray(data.posts) ? data.posts : []
+          const loadedStreams = Array.isArray(data.streams) ? data.streams : []
+          cachedIndex = { posts: loadedPosts, streams: loadedStreams }
+          setPosts(loadedPosts)
+          setStreams(loadedStreams)
         })
         .catch(() => {})
         .finally(() => setLoadingPosts(false))
@@ -155,22 +164,22 @@ export function CommandPalette() {
         onSelect: () => router.push('/blog'),
       },
       {
+        id: 'nav-stream',
+        group: 'Navigation',
+        title: 'tail -f ./stream.log',
+        subtitle: 'Short-form thoughts, TILs & micro-updates',
+        keywords: 'stream microblog twitter memos thoughts til updates',
+        icon: Radio,
+        onSelect: () => router.push('/stream'),
+      },
+      {
         id: 'nav-gallery',
         group: 'Navigation',
         title: 'cd ./gallery',
-        subtitle: 'Photography grid, world footprint map & EXIF',
-        keywords: 'gallery photos pictures camera map exif',
+        subtitle: 'Photography gallery & camera EXIF',
+        keywords: 'gallery photos pictures camera exif',
         icon: ImageIcon,
         onSelect: () => router.push('/gallery'),
-      },
-      {
-        id: 'nav-now',
-        group: 'Navigation',
-        title: 'systemctl status (/now)',
-        subtitle: 'What I am currently working on & exploring',
-        keywords: 'now status current focus',
-        icon: Activity,
-        onSelect: () => router.push('/now'),
       },
       {
         id: 'nav-guestbook',
@@ -191,6 +200,26 @@ export function CommandPalette() {
         onSelect: () => router.push('/apps/sales-tax-assistant'),
       },
     ]
+
+    const streamItems: CommandItem[] = streams.map((s) => {
+      const anchor = `s-${s.id.replace(/-/g, '').slice(0, 8)}`
+      const oneLine = s.content.replace(/\s+/g, ' ').trim()
+      return {
+        id: `stream-${s.id}`,
+        group: 'Stream',
+        title: oneLine.slice(0, 90) || '[Stream media]',
+        subtitle: [
+          formatTechDate(s.createdAt),
+          s.tags.length > 0 ? `#${s.tags.join(' #')}` : '/stream',
+        ]
+          .filter(Boolean)
+          .join(' · '),
+        bodyText: oneLine,
+        keywords: `stream ${s.tags.join(' ')} ${oneLine}`,
+        icon: Radio,
+        onSelect: () => router.push(`/stream#${anchor}`),
+      }
+    })
 
     const postItems: CommandItem[] = posts.map((post) => ({
       id: `post-${post.slug}`,
@@ -263,8 +292,8 @@ export function CommandPalette() {
       },
     ]
 
-    return [...navItems, ...postItems, ...actionItems]
-  }, [posts, router])
+    return [...navItems, ...streamItems, ...postItems, ...actionItems]
+  }, [posts, streams, router])
 
   const filteredItems = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -314,7 +343,12 @@ export function CommandPalette() {
 
   if (!open) return null
 
-  const groups: Array<CommandItem['group']> = ['Navigation', 'Blog Posts', 'Links & Actions']
+  const groups: Array<CommandItem['group']> = [
+    'Navigation',
+    'Stream',
+    'Blog Posts',
+    'Links & Actions',
+  ]
 
   return (
     <div
@@ -338,7 +372,7 @@ export function CommandPalette() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleInputKeyDown}
-            placeholder="Full-text grep across posts, pages & commands..."
+            placeholder="Full-text grep across posts, stream & commands..."
             className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
           />
           {loadingPosts && (
@@ -357,8 +391,8 @@ export function CommandPalette() {
         <div ref={listRef} className="max-h-[60vh] overflow-y-auto p-2">
           {filteredItems.length === 0 ? (
             <div className="py-12 text-center text-sm text-muted-foreground">
-              <span className="text-red-400">0 matches:</span> No command or article text matching
-              &quot;{query}&quot;
+              <span className="text-red-400">0 matches:</span> No command, stream, or article
+              matching &quot;{query}&quot;
             </div>
           ) : (
             groups.map((groupName) => {

@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
 import { withEdgeCache } from '@/lib/cache'
-import { getBlogPosts, getNotionPageContent } from '@/lib/notion'
+import { getBlogPosts, getNotionPageContent, getStreamPosts } from '@/lib/notion'
 import { extractArticleDetails } from '@/lib/notion-content'
 
 export const runtime = 'edge'
 
-interface SearchIndexEntry {
+interface SearchPostEntry {
   slug: string
   title: string
   date: string
@@ -15,14 +15,27 @@ interface SearchIndexEntry {
   bodyText: string
 }
 
+interface SearchStreamEntry {
+  id: string
+  content: string
+  createdAt: string
+  tags: string[]
+}
+
+interface SearchIndexPayload {
+  posts: SearchPostEntry[]
+  streams: SearchStreamEntry[]
+}
+
 export async function GET() {
-  const items = await withEdgeCache<SearchIndexEntry[]>(
-    'search:fulltext-index:v1',
+  const payload = await withEdgeCache<SearchIndexPayload>(
+    'search:fulltext-index:v2',
     async () => {
-      const posts = (await getBlogPosts()).filter((post) => Boolean(post.slug))
+      const [allPosts, allStreams] = await Promise.all([getBlogPosts(), getStreamPosts()])
+      const posts = allPosts.filter((post) => Boolean(post.slug))
 
       // Enrich up to the 25 most recent posts with full-text body content for grep search
-      const enriched = await Promise.all(
+      const enrichedPosts = await Promise.all(
         posts.map(async (post, index) => {
           let bodyText = ''
           if (index < 25) {
@@ -53,17 +66,21 @@ export async function GET() {
         })
       )
 
-      return enriched
+      const streams: SearchStreamEntry[] = allStreams.slice(0, 40).map((item) => ({
+        id: item.id,
+        content: item.content,
+        createdAt: item.createdAt,
+        tags: item.tags,
+      }))
+
+      return { posts: enrichedPosts, streams }
     },
-    { freshSeconds: 600, maxStaleSeconds: 3600 }
+    { freshSeconds: 300, maxStaleSeconds: 2400 }
   )
 
-  return NextResponse.json(
-    { posts: items },
-    {
-      headers: {
-        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=1800',
-      },
-    }
-  )
+  return NextResponse.json(payload, {
+    headers: {
+      'Cache-Control': 'public, s-maxage=180, stale-while-revalidate=1200',
+    },
+  })
 }

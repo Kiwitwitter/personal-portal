@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Github, Mail, Linkedin } from 'lucide-react'
 import { triggerCommandPalette } from '@/components/ui/CommandPalette'
+import { formatRelativeTime } from '@/lib/utils'
+import type { StreamItem } from '@/lib/types'
 
 interface HistoryEntry {
   id: number
@@ -11,14 +13,18 @@ interface HistoryEntry {
   output: React.ReactNode
 }
 
+const STREAM_SECRET_STORAGE_KEY = 'pzhng_stream_secret'
+
 const AVAILABLE_COMMANDS = [
   'help',
+  'stream',
+  'tweet ',
   'ask ',
   'whoami',
   'ls',
   'cd blog',
+  'cd stream',
   'cd gallery',
-  'cd now',
   'cd guestbook',
   'projects',
   'skills',
@@ -101,14 +107,120 @@ export const TerminalHero = () => {
     }
   }
 
+  const runFetchStream = async (entryId: number) => {
+    try {
+      const res = await fetch('/api/stream?limit=5')
+      const data = (await res.json()) as { items?: StreamItem[] }
+      const items = data.items || []
+      if (items.length === 0) {
+        updateHistoryOutput(
+          entryId,
+          <span className="text-muted-foreground">No stream posts yet.</span>
+        )
+        return
+      }
+      const now = Date.now()
+      updateHistoryOutput(
+        entryId,
+        <div className="space-y-1.5 text-xs sm:text-sm">
+          {items.map((item) => (
+            <div key={item.id} className="text-muted-foreground">
+              <span className="text-primary">
+                [{formatRelativeTime(item.createdAt, now)}]
+              </span>{' '}
+              <span className="text-foreground/90">
+                {item.content.replace(/\s+/g, ' ').slice(0, 140)}
+              </span>
+            </div>
+          ))}
+          <div>
+            <button
+              type="button"
+              onClick={() => router.push('/stream')}
+              className="text-primary hover:underline text-xs"
+            >
+              → open full /stream
+            </button>
+          </div>
+        </div>
+      )
+    } catch {
+      updateHistoryOutput(
+        entryId,
+        <span className="text-red-400">Failed to load /api/stream.</span>
+      )
+    }
+  }
+
+  const runPublishTweet = async (entryId: number, textToPost: string) => {
+    let secret = ''
+    try {
+      secret = localStorage.getItem(STREAM_SECRET_STORAGE_KEY) || ''
+    } catch {
+      secret = ''
+    }
+
+    if (!secret) {
+      updateHistoryOutput(
+        entryId,
+        <span className="text-yellow-400">
+          Missing token. Run{' '}
+          <span className="text-foreground">tweet --auth &lt;STREAM_SECRET&gt;</span> once in
+          this browser first.
+        </span>
+      )
+      return
+    }
+
+    try {
+      const res = await fetch('/api/stream', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${secret}`,
+        },
+        body: JSON.stringify({ text: textToPost }),
+      })
+      const data = (await res.json()) as { item?: StreamItem; error?: string }
+      if (!res.ok || !data.item) {
+        updateHistoryOutput(
+          entryId,
+          <span className="text-red-400">{data.error || 'Failed to post to /stream.'}</span>
+        )
+        return
+      }
+      updateHistoryOutput(
+        entryId,
+        <span className="text-green-400">
+          Published to /stream!{' '}
+          <button
+            type="button"
+            onClick={() => router.push('/stream')}
+            className="underline hover:text-primary"
+          >
+            View /stream →
+          </button>
+        </span>
+      )
+    } catch {
+      updateHistoryOutput(
+        entryId,
+        <span className="text-red-400">Network error posting to /api/stream.</span>
+      )
+    }
+  }
+
   const executeCommand = (rawCmd: string) => {
     const trimmed = rawCmd.trim()
     if (!trimmed) return
 
-    setCmdHistory((prev) => [...prev, trimmed])
-    setHistoryCursor(-1)
-
     const lower = trimmed.toLowerCase()
+    const isSecretAuth = lower.startsWith('tweet --auth ')
+
+    if (!isSecretAuth) {
+      setCmdHistory((prev) => [...prev, trimmed])
+    }
+    setHistoryCursor(-1)
 
     if (lower === 'clear' || lower === 'cls') {
       setHistory([])
@@ -117,6 +229,7 @@ export const TerminalHero = () => {
     }
 
     const entryId = nextId.current++
+    let displayCommand = trimmed
     let output: React.ReactNode = null
 
     if (lower === 'help' || lower === '?') {
@@ -126,13 +239,16 @@ export const TerminalHero = () => {
             <span className="text-primary">ask &lt;question&gt;</span> — chat with AI agent
           </div>
           <div>
+            <span className="text-primary">stream</span> — tail latest short thoughts
+          </div>
+          <div>
             <span className="text-primary">whoami</span> — bio &amp; current role
           </div>
           <div>
             <span className="text-primary">ls</span> — list site directories
           </div>
           <div>
-            <span className="text-primary">cd blog | gallery | now</span> — navigate
+            <span className="text-primary">cd blog | stream | gallery</span> — navigate
           </div>
           <div>
             <span className="text-primary">cd guestbook</span> — open guestbook log
@@ -147,13 +263,44 @@ export const TerminalHero = () => {
             <span className="text-primary">git log</span> — career commit history
           </div>
           <div>
-            <span className="text-primary">cv</span> — open resume PDF
-          </div>
-          <div>
             <span className="text-primary">search</span> — open ⌘K grep palette
           </div>
         </div>
       )
+    } else if (lower === 'stream' || lower === 'tail stream' || lower === 'tail -f stream.log') {
+      output = <span className="text-primary animate-pulse">tailing ./stream.log ...</span>
+      void runFetchStream(entryId)
+    } else if (isSecretAuth) {
+      const secretVal = trimmed.slice('tweet --auth '.length).trim()
+      displayCommand = 'tweet --auth ********'
+      if (!secretVal) {
+        output = <span className="text-yellow-400">Usage: tweet --auth &lt;STREAM_SECRET&gt;</span>
+      } else {
+        try {
+          localStorage.setItem(STREAM_SECRET_STORAGE_KEY, secretVal)
+          output = (
+            <span className="text-green-400">
+              Token saved locally. You can now post via{' '}
+              <span className="text-foreground">tweet &lt;message&gt;</span>.
+            </span>
+          )
+        } catch {
+          output = <span className="text-red-400">Could not write to localStorage.</span>
+        }
+      }
+    } else if (lower === 'tweet' || lower.startsWith('tweet ')) {
+      const message = trimmed.slice(5).trim().replace(/^["']|["']$/g, '')
+      if (!message) {
+        output = (
+          <span className="text-yellow-400">
+            Usage: tweet &lt;text&gt; (owner command; set token once via{' '}
+            <span className="text-foreground">tweet --auth &lt;secret&gt;</span>)
+          </span>
+        )
+      } else {
+        output = <span className="text-primary animate-pulse">publishing to /stream ...</span>
+        void runPublishTweet(entryId, message)
+      }
     } else if (lower === 'ask' || lower.startsWith('ask ')) {
       const question = trimmed.slice(3).trim().replace(/^["']|["']$/g, '')
       if (!question) {
@@ -196,17 +343,17 @@ export const TerminalHero = () => {
           </button>
           <button
             type="button"
+            onClick={() => router.push('/stream')}
+            className="text-blue-400 hover:underline"
+          >
+            drwxr-xr-x stream/
+          </button>
+          <button
+            type="button"
             onClick={() => router.push('/gallery')}
             className="text-blue-400 hover:underline"
           >
             drwxr-xr-x gallery/
-          </button>
-          <button
-            type="button"
-            onClick={() => router.push('/now')}
-            className="text-blue-400 hover:underline"
-          >
-            drwxr-xr-x now/
           </button>
           <button
             type="button"
@@ -235,12 +382,12 @@ export const TerminalHero = () => {
     } else if (lower === 'cd blog' || lower === 'cd ./blog' || lower === 'blog') {
       output = <span className="text-green-400">Navigating to ~/pzhng/blog ...</span>
       setTimeout(() => router.push('/blog'), 180)
+    } else if (lower === 'cd stream' || lower === 'cd ./stream') {
+      output = <span className="text-green-400">Navigating to ~/pzhng/stream ...</span>
+      setTimeout(() => router.push('/stream'), 180)
     } else if (lower === 'cd gallery' || lower === 'cd ./gallery' || lower === 'gallery') {
       output = <span className="text-green-400">Navigating to ~/pzhng/gallery ...</span>
       setTimeout(() => router.push('/gallery'), 180)
-    } else if (lower === 'cd now' || lower === 'cd ./now' || lower === 'now') {
-      output = <span className="text-green-400">Navigating to ~/pzhng/now ...</span>
-      setTimeout(() => router.push('/now'), 180)
     } else if (
       lower === 'cd guestbook' ||
       lower === 'cd ./guestbook' ||
@@ -383,7 +530,7 @@ export const TerminalHero = () => {
       ...prev,
       {
         id: entryId,
-        command: trimmed,
+        command: displayCommand,
         output,
       },
     ])
@@ -446,7 +593,7 @@ export const TerminalHero = () => {
             <div className="ml-2 text-xs text-muted-foreground font-mono">zsh — pzhng.com</div>
           </div>
           <span className="hidden sm:inline text-[11px] font-mono text-muted-foreground/70">
-            AI shell · try &apos;ask ...&apos; or &apos;help&apos;
+            AI shell · try &apos;stream&apos;, &apos;ask ...&apos; or &apos;help&apos;
           </span>
         </div>
 
@@ -525,7 +672,7 @@ export const TerminalHero = () => {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="type 'help' or 'ask what did Peng build?'"
+                placeholder="type 'help', 'stream', or 'ask what did Peng build?'"
                 aria-label="Terminal command input"
                 autoComplete="off"
                 autoCorrect="off"
@@ -541,9 +688,9 @@ export const TerminalHero = () => {
               {(
                 [
                   'help',
+                  'stream',
                   'ask 介绍一下你的分布式系统经历',
                   'ls',
-                  'cd now',
                   'cd guestbook',
                 ] as const
               ).map((cmd) => (

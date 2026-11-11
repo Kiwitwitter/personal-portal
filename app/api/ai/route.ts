@@ -11,6 +11,7 @@ import {
   getBlogPosts,
   getBlogPostBySlug,
   getNotionPageContent,
+  getStreamPosts,
 } from '@/lib/notion'
 import { extractArticleDetails } from '@/lib/notion-content'
 
@@ -209,7 +210,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Missing question' }, { status: 400 })
   }
 
-  const posts = await getBlogPosts()
+  const [posts, streamItems] = await Promise.all([getBlogPosts(), getStreamPosts()])
   const postsCatalog = posts
     .filter((p) => Boolean(p.slug))
     .slice(0, 15)
@@ -219,8 +220,16 @@ export async function POST(request: NextRequest) {
     )
     .join('\n')
 
+  const recentStreamsCatalog = streamItems
+    .slice(0, 8)
+    .map((s) => `- [${s.createdAt.slice(0, 10)}] ${s.content.replace(/\s+/g, ' ').slice(0, 220)}`)
+    .join('\n')
+
   const isZh = /[\u4e00-\u9fff]/.test(question)
   const systemPrompt = `${PROFILE_CONTEXT}
+
+Recent Short Thoughts on /stream:
+${recentStreamsCatalog || '(No stream updates loaded)'}
 
 Published Blog Posts on pzhng.com:
 ${postsCatalog || '(No posts loaded)'}
