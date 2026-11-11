@@ -2,6 +2,7 @@ import { cache } from 'react'
 import { Client } from '@notionhq/client'
 import { NotionAPI } from 'notion-client'
 import { invalidateEdgeCache, withEdgeCache } from './cache'
+import { getStreamShortId } from './utils'
 import type { BlogPost, GalleryImage, NotionPage, StreamItem } from './types'
 
 // Official Notion client for database & page metadata queries
@@ -341,6 +342,35 @@ export const getStreamPosts = cache(async (): Promise<StreamItem[]> => {
     },
     { freshSeconds: 120, maxStaleSeconds: 1200 }
   )
+})
+
+/**
+ * Resolve a single Stream item by its 8-char tail short ID or full Notion UUID
+ */
+export const getStreamPostById = cache(async (idOrShort: string): Promise<StreamItem | null> => {
+  const cleaned = idOrShort.replace(/^s-/, '').replace(/-/g, '').trim().toLowerCase()
+  if (!cleaned) return null
+
+  const all = await getStreamPosts()
+  const matched = all.find(
+    (item) =>
+      normalizePageId(item.id) === cleaned || getStreamShortId(item.id) === cleaned
+  )
+  if (matched) return matched
+
+  if (isNotionUuid(idOrShort)) {
+    try {
+      const page = (await notion.pages.retrieve({
+        page_id: idOrShort,
+      })) as unknown as NotionPage
+      if (!getCheckboxProperty(page.properties?.Published)) return null
+      return parseNotionPageToStreamItem(page)
+    } catch {
+      return null
+    }
+  }
+
+  return null
 })
 
 /**

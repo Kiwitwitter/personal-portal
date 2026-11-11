@@ -18,7 +18,7 @@ import {
   CornerDownLeft,
   X,
 } from 'lucide-react'
-import { cn, formatTechDate } from '@/lib/utils'
+import { cn, formatTechDate, getStreamShortId } from '@/lib/utils'
 
 export const OPEN_COMMAND_PALETTE_EVENT = 'open-command-palette'
 
@@ -202,7 +202,7 @@ export function CommandPalette() {
     ]
 
     const streamItems: CommandItem[] = streams.map((s) => {
-      const anchor = `s-${s.id.replace(/-/g, '').slice(0, 8)}`
+      const shortId = getStreamShortId(s.id)
       const oneLine = s.content.replace(/\s+/g, ' ').trim()
       return {
         id: `stream-${s.id}`,
@@ -210,14 +210,14 @@ export function CommandPalette() {
         title: oneLine.slice(0, 90) || '[Stream media]',
         subtitle: [
           formatTechDate(s.createdAt),
-          s.tags.length > 0 ? `#${s.tags.join(' #')}` : '/stream',
+          s.tags.length > 0 ? `#${s.tags.join(' #')}` : `/stream/${shortId}`,
         ]
           .filter(Boolean)
           .join(' · '),
         bodyText: oneLine,
         keywords: `stream ${s.tags.join(' ')} ${oneLine}`,
         icon: Radio,
-        onSelect: () => router.push(`/stream#${anchor}`),
+        onSelect: () => router.push(`/stream/${shortId}`),
       }
     })
 

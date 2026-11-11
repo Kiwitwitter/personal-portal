@@ -1,4 +1,5 @@
 import { getBlogPosts, getStreamPosts } from '@/lib/notion'
+import { getStreamShortId } from '@/lib/utils'
 
 export const runtime = 'edge'
 
@@ -41,8 +42,8 @@ export async function GET() {
     })
 
   const streamEntries: FeedEntry[] = streamItems.slice(0, 30).map((item) => {
-    const anchor = `s-${item.id.replace(/-/g, '').slice(0, 8)}`
-    const url = `${SITE_URL}/stream#${anchor}`
+    const shortId = getStreamShortId(item.id)
+    const url = `${SITE_URL}/stream/${shortId}`
     const parsed = new Date(item.createdAt)
     const oneLine = item.content.replace(/\s+/g, ' ').trim()
     return {

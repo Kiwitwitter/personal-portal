@@ -89,3 +89,14 @@ export function formatExactTimestamp(date: string | Date): string {
   if (Number.isNaN(dateObj.getTime())) return String(date)
   return dateObj.toISOString().replace('T', ' ').slice(0, 19) + ' UTC'
 }
+
+/**
+ * Extract the unique 8-hex random tail from a Notion UUID (Notion UUIDs share a time/shard prefix)
+ */
+export function getStreamShortId(id: string): string {
+  return id.replace(/-/g, '').toLowerCase().slice(-8)
+}
+
+export function getStreamAnchorId(id: string): string {
+  return `s-${getStreamShortId(id)}`
+}

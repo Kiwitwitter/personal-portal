@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import Lightbox from 'yet-another-react-lightbox'
 import 'yet-another-react-lightbox/styles.css'
 import Counter from 'yet-another-react-lightbox/plugins/counter'
@@ -25,11 +26,14 @@ import {
   formatExactTimestamp,
   formatRelativeTime,
   formatShortDate,
+  getStreamAnchorId,
+  getStreamShortId,
 } from '@/lib/utils'
 import type { ExifMetadata, StreamItem } from '@/lib/types'
 
 interface StreamFeedProps {
   initialItems: StreamItem[]
+  singleView?: boolean
 }
 
 const STREAM_SECRET_STORAGE_KEY = 'pzhng_stream_secret'
@@ -195,7 +199,7 @@ function StreamContent({
   )
 }
 
-export function StreamFeed({ initialItems }: StreamFeedProps) {
+export function StreamFeed({ initialItems, singleView = false }: StreamFeedProps) {
   const [items, setItems] = useState<StreamItem[]>(initialItems)
   const [selectedTag, setSelectedTag] = useState<string | null>(null)
   const [copiedId, setCopiedId] = useState<string | null>(null)
@@ -298,11 +302,10 @@ export function StreamFeed({ initialItems }: StreamFeedProps) {
   }
 
   const handleCopyAnchor = async (item: StreamItem) => {
-    const anchor = `s-${item.id.replace(/-/g, '').slice(0, 8)}`
-    const url = `${window.location.origin}/stream#${anchor}`
+    const shortId = getStreamShortId(item.id)
+    const url = `${window.location.origin}/stream/${shortId}`
     try {
       await navigator.clipboard.writeText(url)
-      window.history.replaceState(null, '', `#${anchor}`)
       setCopiedId(item.id)
       setTimeout(() => setCopiedId((cur) => (cur === item.id ? null : cur)), 1800)
     } catch {
@@ -385,66 +388,68 @@ export function StreamFeed({ initialItems }: StreamFeedProps) {
   return (
     <div className="max-w-3xl">
       {/* Toolbar: Tag Filter + Quick Post Trigger */}
-      <div className="flex items-center justify-between gap-3 flex-wrap mb-8">
-        <div className="flex items-center gap-2 flex-wrap font-mono text-xs">
-          {tagCounts.length > 0 && (
-            <>
-              <button
-                type="button"
-                onClick={() => setSelectedTag(null)}
-                className={cn(
-                  'px-2.5 py-1 rounded border transition-colors',
-                  selectedTag === null
-                    ? 'border-primary/50 bg-primary/10 text-primary font-semibold'
-                    : 'border-border text-muted-foreground hover:text-foreground'
-                )}
-              >
-                all ({items.length})
-              </button>
-              {tagCounts.map(({ tag, count }) => {
-                const active = selectedTag === tag
-                return (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() => handleToggleTag(tag)}
-                    className={cn(
-                      'px-2.5 py-1 rounded border transition-colors',
-                      active
-                        ? 'border-primary/50 bg-primary/10 text-primary font-semibold'
-                        : 'border-border text-muted-foreground hover:text-foreground'
-                    )}
-                  >
-                    #{tag}{' '}
-                    <span className="text-muted-foreground/60">({count})</span>
-                  </button>
-                )
-              })}
-            </>
-          )}
-        </div>
+      {!singleView && (
+        <div className="flex items-center justify-between gap-3 flex-wrap mb-8">
+          <div className="flex items-center gap-2 flex-wrap font-mono text-xs">
+            {tagCounts.length > 0 && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setSelectedTag(null)}
+                  className={cn(
+                    'px-2.5 py-1 rounded border transition-colors',
+                    selectedTag === null
+                      ? 'border-primary/50 bg-primary/10 text-primary font-semibold'
+                      : 'border-border text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  all ({items.length})
+                </button>
+                {tagCounts.map(({ tag, count }) => {
+                  const active = selectedTag === tag
+                  return (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => handleToggleTag(tag)}
+                      className={cn(
+                        'px-2.5 py-1 rounded border transition-colors',
+                        active
+                          ? 'border-primary/50 bg-primary/10 text-primary font-semibold'
+                          : 'border-border text-muted-foreground hover:text-foreground'
+                      )}
+                    >
+                      #{tag}{' '}
+                      <span className="text-muted-foreground/60">({count})</span>
+                    </button>
+                  )
+                })}
+              </>
+            )}
+          </div>
 
-        <button
-          type="button"
-          onClick={() => {
-            setComposerOpen((prev) => !prev)
-            setPublishError(null)
-          }}
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-border bg-card hover:border-primary/40 hover:text-primary text-xs font-mono text-muted-foreground transition-colors"
-        >
-          {composerOpen ? (
-            <>
-              <X className="w-3.5 h-3.5" />
-              <span>close</span>
-            </>
-          ) : (
-            <>
-              <Plus className="w-3.5 h-3.5 text-primary" />
-              <span>post</span>
-            </>
-          )}
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={() => {
+              setComposerOpen((prev) => !prev)
+              setPublishError(null)
+            }}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-border bg-card hover:border-primary/40 hover:text-primary text-xs font-mono text-muted-foreground transition-colors"
+          >
+            {composerOpen ? (
+              <>
+                <X className="w-3.5 h-3.5" />
+                <span>close</span>
+              </>
+            ) : (
+              <>
+                <Plus className="w-3.5 h-3.5 text-primary" />
+                <span>post</span>
+              </>
+            )}
+          </button>
+        </div>
+      )}
 
       {/* Collapsible Quick Composer (Owner Mode) */}
       {composerOpen && (
@@ -516,7 +521,8 @@ export function StreamFeed({ initialItems }: StreamFeedProps) {
       ) : (
         <div className="relative pl-6 sm:pl-8 border-l border-border space-y-6">
           {filteredItems.map((item) => {
-            const anchorId = `s-${item.id.replace(/-/g, '').slice(0, 8)}`
+            const shortId = getStreamShortId(item.id)
+            const anchorId = getStreamAnchorId(item.id)
             const timeLabel = nowMs
               ? formatRelativeTime(item.createdAt, nowMs)
               : formatShortDate(item.createdAt)
@@ -544,13 +550,13 @@ export function StreamFeed({ initialItems }: StreamFeedProps) {
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-semibold text-foreground">@pzhng</span>
                     <span className="text-muted-foreground/50">·</span>
-                    <time
-                      dateTime={item.createdAt}
+                    <Link
+                      href={`/stream/${shortId}`}
                       title={exactTitle}
-                      className="text-muted-foreground hover:text-foreground transition-colors cursor-default"
+                      className="text-muted-foreground hover:text-primary hover:underline transition-colors"
                     >
-                      {timeLabel}
-                    </time>
+                      <time dateTime={item.createdAt}>{timeLabel}</time>
+                    </Link>
                   </div>
 
                   {item.pinned && (
@@ -646,7 +652,7 @@ export function StreamFeed({ initialItems }: StreamFeedProps) {
                     ) : (
                       <>
                         <Link2 className="w-3.5 h-3.5" />
-                        <span>#{anchorId}</span>
+                        <span>/{shortId}</span>
                       </>
                     )}
                   </button>
