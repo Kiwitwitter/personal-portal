@@ -1,8 +1,9 @@
 import { cache } from 'react'
 import { Client } from '@notionhq/client'
 import { NotionAPI } from 'notion-client'
-import { withEdgeCache } from './cache'
-import type { BlogPost, GalleryImage, NotionPage } from './types'
+import { invalidateEdgeCache, withEdgeCache } from './cache'
+import { getStreamShortId } from './utils'
+import type { BlogPost, GalleryImage, NotionPage, StreamItem } from './types'
 
 // Official Notion client for database & page metadata queries
 const notion = new Client({
@@ -15,6 +16,10 @@ const notionAPI = new NotionAPI()
 // Database IDs from environment
 const BLOG_DATABASE_ID = process.env.NOTION_BLOG_DATABASE_ID || ''
 const GALLERY_DATABASE_ID = process.env.NOTION_GALLERY_DATABASE_ID || ''
+const STREAM_DATABASE_ID =
+  process.env.NOTION_STREAM_DATABASE_ID || '415460b6-4206-8104-a240-f43102d153b7'
+
+export const STREAM_CACHE_KEY = 'notion:stream:v1'
 
 const UUID_REGEX = /^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i
 
@@ -46,7 +51,7 @@ function extractUrlExtension(url: string): string {
 
 function toProxiedAssetUrl(
   url: string,
-  kind: 'blog-cover' | 'gallery',
+  kind: 'blog-cover' | 'gallery' | 'stream',
   pageId: string,
   index = 0
 ): string {
@@ -57,10 +62,29 @@ function toProxiedAssetUrl(
   const params = new URLSearchParams({
     kind,
     id: pageId,
-    ...(kind === 'gallery' ? { index: String(index) } : {}),
+    ...(kind === 'gallery' || kind === 'stream' ? { index: String(index) } : {}),
     ...(ext ? { ext } : {}),
   })
   return `/api/image?${params.toString()}`
+}
+
+/**
+ * Extract inline #hashtags while ignoring URLs and code spans/blocks
+ */
+export function extractHashtags(text: string): string[] {
+  const cleaned = text
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/`[^`]*`/g, ' ')
+    .replace(/https?:\/\/\S+/g, ' ')
+
+  const tags = new Set<string>()
+  const regex = /(?:^|\s)#([a-zA-Z0-9_\u4e00-\u9fff-]{1,32})/g
+  let match: RegExpExecArray | null
+  while ((match = regex.exec(cleaned)) !== null) {
+    const tag = match[1].trim().toLowerCase()
+    if (tag) tags.add(tag)
+  }
+  return Array.from(tags)
 }
 
 /**
@@ -242,7 +266,7 @@ export const getGalleryImages = cache(async (): Promise<GalleryImage[]> => {
   }
 
   return withEdgeCache(
-    'notion:gallery-images:v2',
+    'notion:gallery-images:v3',
     async () => {
       try {
         const response = await notion.databases.query({
@@ -274,10 +298,145 @@ export const getGalleryImages = cache(async (): Promise<GalleryImage[]> => {
 })
 
 /**
- * Resolve a fresh underlying URL for a Notion-hosted cover or gallery file (used by /api/image)
+ * Get all published short stream posts from Notion Stream database
+ */
+export const getStreamPosts = cache(async (): Promise<StreamItem[]> => {
+  if (!STREAM_DATABASE_ID) {
+    console.warn('NOTION_STREAM_DATABASE_ID is not set')
+    return []
+  }
+
+  return withEdgeCache(
+    STREAM_CACHE_KEY,
+    async () => {
+      try {
+        const response = await notion.databases.query({
+          database_id: STREAM_DATABASE_ID,
+          filter: {
+            property: 'Published',
+            checkbox: {
+              equals: true,
+            },
+          },
+          sorts: [
+            {
+              timestamp: 'created_time',
+              direction: 'descending',
+            },
+          ],
+        })
+
+        const items = response.results
+          .map((page) => parseNotionPageToStreamItem(page as unknown as NotionPage))
+          .filter((item) => Boolean(item.content.trim()) || item.images.length > 0)
+
+        // Pin flagged items to the top while preserving created_time desc order
+        return items.sort((a, b) => {
+          if (a.pinned !== b.pinned) return a.pinned ? -1 : 1
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        })
+      } catch (error) {
+        console.error('Error fetching stream posts:', error)
+        return []
+      }
+    },
+    { freshSeconds: 120, maxStaleSeconds: 1200 }
+  )
+})
+
+/**
+ * Resolve a single Stream item by its 8-char tail short ID or full Notion UUID
+ */
+export const getStreamPostById = cache(async (idOrShort: string): Promise<StreamItem | null> => {
+  const cleaned = idOrShort.replace(/^s-/, '').replace(/-/g, '').trim().toLowerCase()
+  if (!cleaned) return null
+
+  const all = await getStreamPosts()
+  const matched = all.find(
+    (item) =>
+      normalizePageId(item.id) === cleaned || getStreamShortId(item.id) === cleaned
+  )
+  if (matched) return matched
+
+  if (isNotionUuid(idOrShort)) {
+    try {
+      const page = (await notion.pages.retrieve({
+        page_id: idOrShort,
+      })) as unknown as NotionPage
+      if (!getCheckboxProperty(page.properties?.Published)) return null
+      return parseNotionPageToStreamItem(page)
+    } catch {
+      return null
+    }
+  }
+
+  return null
+})
+
+/**
+ * Create a new Stream post in Notion and immediately invalidate Edge caches
+ */
+export async function createStreamPost(input: {
+  text: string
+  pinned?: boolean
+  imageUrls?: string[]
+}): Promise<StreamItem> {
+  if (!STREAM_DATABASE_ID) {
+    throw new Error('NOTION_STREAM_DATABASE_ID is not configured')
+  }
+
+  const chunks: Array<{ type: 'text'; text: { content: string } }> = []
+  for (let i = 0; i < input.text.length; i += 1800) {
+    chunks.push({
+      type: 'text',
+      text: { content: input.text.slice(i, i + 1800) },
+    })
+  }
+
+  const externalFiles = (input.imageUrls || [])
+    .filter((url) => /^https?:\/\//i.test(url))
+    .slice(0, 4)
+    .map((url, idx) => ({
+      name: `media-${idx + 1}`,
+      type: 'external' as const,
+      external: { url },
+    }))
+
+  const created = await notion.pages.create({
+    parent: { database_id: STREAM_DATABASE_ID },
+    properties: {
+      Content: {
+        title: chunks,
+      },
+      Pinned: {
+        checkbox: Boolean(input.pinned),
+      },
+      Published: {
+        checkbox: true,
+      },
+      ...(externalFiles.length > 0
+        ? {
+            Images: {
+              files: externalFiles,
+            },
+          }
+        : {}),
+    },
+  })
+
+  await Promise.all([
+    invalidateEdgeCache(STREAM_CACHE_KEY),
+    invalidateEdgeCache('search:fulltext-index:v2'),
+  ])
+
+  return parseNotionPageToStreamItem(created as unknown as NotionPage)
+}
+
+/**
+ * Resolve a fresh underlying URL for a Notion-hosted cover, gallery, or stream file (used by /api/image & /api/exif)
  */
 export async function resolveNotionAssetUrl(
-  kind: 'blog-cover' | 'gallery',
+  kind: 'blog-cover' | 'gallery' | 'stream',
   pageId: string,
   index = 0
 ): Promise<string | null> {
@@ -298,6 +457,15 @@ export async function resolveNotionAssetUrl(
 
         if (kind === 'blog-cover') {
           return getRawCoverImage(page) || null
+        }
+
+        if (kind === 'stream') {
+          const urls = getRawFilesProperty(
+            page.properties?.Images || page.properties?.Image
+          )
+          if (urls[index]) return urls[index]
+          if (index === 0) return getRawCoverImage(page) || null
+          return null
         }
 
         const urls = getRawFilesProperty(page.properties?.Image)
@@ -351,6 +519,10 @@ function parseNotionPageToBlogPost(page: NotionPage): BlogPost {
 function parseNotionPageToGalleryImage(page: NotionPage): GalleryImage {
   const properties = page.properties
   const rawUrls = getRawFilesProperty(properties.Image)
+  const manualExif =
+    getTextProperty(properties.EXIF) ||
+    getTextProperty(properties.Camera) ||
+    getTextProperty(properties.Specs)
 
   return {
     id: page.id,
@@ -358,6 +530,38 @@ function parseNotionPageToGalleryImage(page: NotionPage): GalleryImage {
     caption: getTextProperty(properties.Caption),
     location: getTextProperty(properties.Location),
     date: getDateProperty(properties.Date),
+    exif: manualExif || undefined,
+    published: getCheckboxProperty(properties.Published),
+  }
+}
+
+function parseNotionPageToStreamItem(page: NotionPage): StreamItem {
+  const properties = page.properties
+  const titleProperty = properties.Content || properties.Title || properties['名称']
+  const mainContent = getTitleProperty(titleProperty)
+  const extraBody = getTextProperty(properties.Body) || getTextProperty(properties.Text)
+  const content = [mainContent, extraBody].filter(Boolean).join('\n').trim()
+
+  const rawFiles = getRawFilesProperty(properties.Images || properties.Image)
+  const rawCover = getRawCoverImage(page)
+  const allRawMedia = rawFiles.length > 0 ? rawFiles : rawCover ? [rawCover] : []
+
+  const explicitTags = getMultiSelectProperty(properties.Tags).map((t) => t.toLowerCase())
+  const inlineTags = extractHashtags(content)
+  const tags = Array.from(new Set([...explicitTags, ...inlineTags]))
+
+  const createdAt =
+    (properties.Date?.type === 'date' && properties.Date.date?.start) ||
+    page.created_time ||
+    new Date().toISOString()
+
+  return {
+    id: page.id,
+    content,
+    createdAt,
+    tags,
+    images: allRawMedia.map((url, idx) => toProxiedAssetUrl(url, 'stream', page.id, idx)),
+    pinned: getCheckboxProperty(properties.Pinned),
     published: getCheckboxProperty(properties.Published),
   }
 }

@@ -10,7 +10,7 @@ interface KV {
   delete(key: string): Promise<void>
 }
 
-const VALID_TYPES: LikeableType[] = ['blog', 'gallery']
+const VALID_TYPES: LikeableType[] = ['blog', 'gallery', 'stream']
 const SAFE_ID_REGEX = /^[a-zA-Z0-9_-]{1,128}$/
 
 function isValidId(id: string | null | undefined): id is string {

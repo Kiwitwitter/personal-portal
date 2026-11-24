@@ -8,6 +8,9 @@ export const runtime = 'edge'
 export const metadata: Metadata = {
   title: 'Gallery | Peng Zhang',
   description: 'Photography gallery showcasing moments captured through my lens.',
+  alternates: {
+    canonical: '/gallery',
+  },
 }
 
 export default async function GalleryPage() {
@@ -23,7 +26,9 @@ export default async function GalleryPage() {
           </div>
           <h1 className="text-4xl font-bold tracking-tight mb-4 font-mono">Gallery</h1>
           <p className="text-lg text-muted-foreground font-mono">
-            <span className="text-blue-400">const</span> <span className="text-yellow-400">collection</span> = <span className="text-green-400">&quot;moments captured through my lens&quot;</span>;
+            <span className="text-blue-400">const</span>{' '}
+            <span className="text-yellow-400">collection</span> ={' '}
+            <span className="text-green-400">&quot;moments captured through my lens&quot;</span>;
           </p>
         </div>
 
